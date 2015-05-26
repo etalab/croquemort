@@ -6,6 +6,8 @@ from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
 
+from tools import generate_hash
+
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
@@ -38,7 +40,7 @@ class HttpService(object):
             logbook.debug(('"url" parameter not found in {data}'
                            .format(data=data)))
             return 400, 'Please specify a "url" parameter.'
-        url_hash = hash(url)
+        url_hash = generate_hash(url)
         logbook.debug(('Checking "{url}" ({hash})'
                        .format(url=url, hash=url_hash)))
         self.fetch(url)
@@ -57,9 +59,9 @@ class HttpService(object):
             logbook.debug(('"group" parameter not found in {data}'
                            .format(data=data)))
             return 400, 'Please specify a "group" parameter.'
-        group_hash = hash(group)
+        group_hash = generate_hash(group)
         for url in urls:
-            url_hash = hash(url)
+            url_hash = generate_hash(url)
             logbook.debug(('Checking "{url}" ({hash}) for group {group}'
                            .format(url=url, hash=url_hash, group=group)))
             r.hset(url_hash, 'group', group_hash)
@@ -70,7 +72,7 @@ class HttpService(object):
 
     @rpc
     def fetch(self, url):
-        if r.hget(hash(url), 'url') is None:
+        if r.hget(generate_hash(url), 'url') is None:
             logbook.debug('URL unknown, checking {url}'.format(url=url))
             self.dispatch("url_to_check", url)
         else:

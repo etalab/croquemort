@@ -4,7 +4,7 @@
 
 The aim of this project is to provide a way to check HTTP resources: hunting 404s, updating redirections and so on.
 
-For instance, given a website that stores a list of external resources, this product allows the owner to send its URLs in bulk and retrieve information for each URL fetched in background (only status code and content type for now). This way he can be informed of dead links or outdated resources and acts accordingly.
+For instance, given a website that stores a list of external resources (html, images or documents), this product allows the owner to send its URLs in bulk and retrieve information for each URL fetched in background (status code and useful headers for now). This way he can be informed of dead links or outdated resources and acts accordingly.
 
 The name comes from the [French term](https://fr.wikipedia.org/wiki/Croque-mort) for [Funeral director](https://en.wikipedia.org/wiki/Funeral_director).
 
@@ -58,31 +58,34 @@ Connected to amqp://guest:**@127.0.0.1:5672//
 Now you can use your favorite HTTP client (mine is [httpie](https://github.com/jakubroztocil/httpie)) to issue a POST request againt `localhost:8000/check/one` with the URL as a parameter:
 
 ```shell
-$ http :8000/check/one url="https://larlet.fr/david/"
+$ http :8000/check/one url="https://www.data.gouv.fr/fr/"
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 29
+Content-Length: 28
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 26 May 2015 14:06:28 GMT
+Date: Tue, 26 May 2015 15:13:16 GMT
 
 {
-  "url-hash": 9094602859126452657
+  "url-hash": 2320457535
 }
 ```
 
 The service returns a URL hash that will be used to retrieve informations related to that URL:
 
 ```shell
-$ http :8000/url/9094602859126452657
+$ http :8000/url/2320457535
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 91
+Content-Length: 174
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 26 May 2015 14:07:18 GMT
+Date: Tue, 26 May 2015 15:13:27 GMT
 
 {
-  "url": "https://larlet.fr/david/", 
   "status": "200", 
+  "content-length": "", 
+  "url": "https://www.data.gouv.fr/fr/", 
+  "last-modified": "", 
+  "etag": "", 
   "content-type": "text/html; charset=utf-8"
 }
 ```
@@ -93,42 +96,48 @@ Date: Tue, 26 May 2015 14:07:18 GMT
 You can also use your  HTTP client to issue a POST request againt `localhost:8000/check/many` with the URLs and the name of the group as parameters:
 
 ```shell
-$ http :8000/check/many urls:='["https://larlet.fr/david/","http://noirbizarre.info/"]' group="group-name"
+$ http :8000/check/many urls:='["https://www.data.gouv.fr/fr/","https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png"]' group="datagouvfr"
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 31
+Content-Length: 30
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 26 May 2015 14:09:22 GMT
+Date: Tue, 26 May 2015 15:13:56 GMT
 
 {
-  "group-hash": 6931515092077926289
+  "group-hash": 2651198169
 }
 ```
 
 This time, the service returns a group hash that will be used to retrieve informations related to that group:
 
 ```shell
-$ http :8000/group/6931515092077926289
+$ http :8000/group/2651198169
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 296
+Content-Length: 724
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 26 May 2015 14:10:04 GMT
+Date: Tue, 26 May 2015 15:14:18 GMT
 
 {
-  "https://larlet.fr/david/": {
-    "url": "https://larlet.fr/david/", 
+  "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png": {
     "status": "200", 
-    "group": "6931515092077926289", 
+    "content-length": "280919", 
+    "group": "2651198169", 
+    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png", 
+    "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT", 
+    "etag": "\"551ab16d-44957\"", 
+    "content-type": "image/png"
+  }, 
+  "name": "datagouvfr", 
+  "https://www.data.gouv.fr/fr/": {
+    "status": "200", 
+    "content-length": "", 
+    "group": "2651198169", 
+    "url": "https://www.data.gouv.fr/fr/", 
+    "last-modified": "", 
+    "etag": "", 
     "content-type": "text/html; charset=utf-8"
-  }, 
-  "http://noirbizarre.info/": {
-    "url": "http://noirbizarre.info/", 
-    "status": "200", 
-    "group": "6931515092077926289", 
-    "content-type": "text/html"
-  }, 
-  "name": "group-name"
+  }
 }
 ```
 
