@@ -6,7 +6,7 @@ from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
 
-from tools import generate_hash
+from tools import chunks, generate_hash, required_parameters
 
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 log = logbook.debug
@@ -17,14 +17,11 @@ class HttpService(object):
     dispatch = EventDispatcher()
 
     @http('GET', '/url')
-    def retrieve_url(self, request):
-        data = json.loads(request.get_data())
-        url = data.get('url', None)
-        if url is None:
-            log('"url" parameter not found in {data}'.format(data=data))
-            return 400, 'Please specify a "url" parameter.'
+    @required_parameters('url')
+    def retrieve_url(self, data):
+        url = data.get('url')
         log('Retrieving {url}'.format(url=url))
-        return self.retrieve_url_from_hash(request, generate_hash(url))
+        return self.retrieve_url_from_hash(data, generate_hash(url))
 
     @http('GET', '/url/<int:url_hash>')
     def retrieve_url_from_hash(self, request, url_hash):
@@ -35,16 +32,16 @@ class HttpService(object):
 
     @http('GET', '/group/<int:group_hash>')
     def retrieve_group_from_hash(self, request, group_hash):
+        log('Retrieving group {hash}'.format(hash=group_hash))
         data = json.loads(request.get_data() or '{}')
         filters = {k.lstrip('filter_'): v for (k, v) in data.iteritems()}
-        log('Retrieving group {hash}'.format(hash=group_hash))
+        if filters:
+            log('Filtering results by {filters}'.format(filters=filters))
         group_infos = r.hgetall(group_hash)
-        log('Grabing {infos}'.format(infos=group_infos))
         infos = {'name': group_infos.pop('name')}
         for url_hash, url in group_infos.iteritems():
             url_infos = r.hgetall(url_hash)
             if filters:
-                log('Filtering results by {filters}'.format(filters=filters))
                 if all(url_infos.get(prop, None) == value
                        for prop, value in filters.iteritems()):
                     infos[url] = url_infos
@@ -53,47 +50,38 @@ class HttpService(object):
         return json.dumps(infos, indent=2)
 
     @http('POST', '/check/one')
-    def check_one(self, request):
-        data = json.loads(request.get_data())
-        url = data.get('url', None)
-        if url is None:
-            log('"url" parameter not found in {data}'.format(data=data))
-            return 400, 'Please specify a "url" parameter.'
+    @required_parameters('url')
+    def check_one(self, data):
+        url = data.get('url')
         url_hash = generate_hash(url)
         log('Checking "{url}" ({hash})'.format(url=url, hash=url_hash))
         self.fetch(url)
         return json.dumps({'url-hash': url_hash}, indent=2)
 
     @http('POST', '/check/many')
-    def check_many(self, request):
-        data = json.loads(request.get_data())
-        urls = data.get('urls', None)
-        if urls is None:
-            log('"urls" parameter not found in {data}'.format(data=data))
-            return 400, 'Please specify a "urls" parameter.'
-        group = data.get('group', None)
-        if group is None:
-            log('"group" parameter not found in {data}'.format(data=data))
-            return 400, 'Please specify a "group" parameter.'
+    @required_parameters('urls', 'group')
+    def check_many(self, data):
+        urls = data.get('urls')
+        group = data.get('group')
         group_hash = generate_hash(group)
-        for url in urls:
-            url_hash = generate_hash(url)
-            log(('Checking "{url}" ({hash}) for group {group}'
-                 .format(url=url, hash=url_hash, group=group)))
-            self.fetch(url, group)
+        log('Checking "{group}" ({hash})'.format(group=group, hash=group_hash))
+        self.fetch_many(urls, group)
         return json.dumps({'group-hash': group_hash}, indent=2)
 
     @rpc
-    def fetch(self, url, group=None):
-        if group is not None:
-            group_hash = generate_hash(group)
+    def fetch(self, url):
+        log('Checking {url}'.format(url=url))
+        self.dispatch('url_to_check', url)
+
+    @rpc
+    def fetch_many(self, urls, group):
+        log('Checking {length} URLs'.format(length=len(urls)))
+        group_hash = generate_hash(group)
+        for url in urls:
             url_hash = generate_hash(url)
             r.hset(url_hash, 'group', group_hash)
             r.hset(group_hash, 'name', group)
             r.hset(group_hash, url_hash, url)
-        if r.hget(generate_hash(url), 'url') is None:
-            log('URL unknown, checking {url}'.format(url=url))
-            self.dispatch('url_to_check', url)
-        else:
-            log('URL known, refreshing {url}'.format(url=url))
-            self.dispatch('url_to_refresh', url)
+            r.hset(url_hash, 'url', url)
+        for chunk in chunks(urls, 100):
+            self.dispatch('urls_to_check', chunk)
