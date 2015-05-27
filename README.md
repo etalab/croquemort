@@ -90,6 +90,29 @@ Date: Tue, 26 May 2015 15:13:27 GMT
 }
 ```
 
+Or you can use the URL passed as a GET parameter (less error prone):
+
+```shell
+$ http GET :8000/url url=https://www.data.gouv.fr/fr/
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Length: 200
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 27 May 2015 11:03:36 GMT
+
+{
+  "status": "200", 
+  "content-length": "", 
+  "group": "2651198169", 
+  "url": "https://www.data.gouv.fr/fr/", 
+  "last-modified": "", 
+  "etag": "", 
+  "content-type": "text/html; charset=utf-8"
+}
+```
+
+Both return the same amount of information.
+
 
 ### Fetching many URLs
 
@@ -141,7 +164,43 @@ Date: Tue, 26 May 2015 15:14:18 GMT
 }
 ```
 
+You can filter results returned for a given group by header (or status) with the `filter_` prefix:
+
+```shell
+$ http GET :8000/group/2651198169 filter_content-type="image/png"
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Length: 471
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 27 May 2015 10:55:10 GMT
+
+{
+  "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png": {
+    "status": "200", 
+    "content-length": "280919", 
+    "group": "2651198169", 
+    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png", 
+    "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT", 
+    "etag": "\"551ab16d-44957\"", 
+    "content-type": "image/png"
+  }, 
+  "name": "datagouvfr"
+}
+```
+
 Note that in both cases, the `http` and the `crawler` services return interesting logging information for debugging.
+
+
+### Computing many URLs
+
+You can programmatically register new URLs and groups using the RPC proxy. There is an example within the `test_csv.py` file which computes URLs from a CSV file (one URL per line).
+
+```shell
+$ python test_csv.py --csvfile path/to/your/file.csv --group groupname
+Group hash: 2752262332
+```
+
+The script returns a group hash that you can use through the HTTP interface as documented above.
 
 
 ## Contributing
