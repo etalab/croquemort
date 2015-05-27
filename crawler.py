@@ -3,22 +3,41 @@ import logbook
 import redis
 import requests
 
-from requests_futures.sessions import FuturesSession
 from nameko.events import event_handler
+from nameko.extensions import DependencyProvider
 
 from tools import generate_hash
 
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 log = logbook.debug
 FakeResponse = collections.namedtuple('Response', ['status_code', 'headers'])
-session = FuturesSession(max_workers=50)
-adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=50)
-session.mount('http://', adapter)
+
+
+class RequestsWrapper(object):
+
+    def __init__(self, session):
+        self.session = session
+
+    def head(self, url):
+        return self.session.head(url)
+
+
+class SessionService(DependencyProvider):
+
+    def setup(self):
+        self.session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(pool_connections=20,
+                                                pool_maxsize=50)
+        self.session.mount('http://', adapter)
+
+    def get_dependency(self, worker_ctx):
+        return RequestsWrapper(self.session)
 
 
 class CrawlerService(object):
     name = 'url_crawler'
     headers = ('etag', 'last-modified', 'content-type', 'content-length')
+    session_service = SessionService()
 
     def store_data(self, url, url_hash, response):
         log('Storing {url}'.format(url=url))
@@ -32,7 +51,7 @@ class CrawlerService(object):
         url_hash = generate_hash(url)
         r.hset(url_hash, 'url', url)
         try:
-            response = session.head(url)
+            response = self.session_service.head(url)
         except requests.exceptions.ConnectionError:
             response = FakeResponse(status_code=503, headers={})
         except Exception, e:
@@ -42,13 +61,5 @@ class CrawlerService(object):
     @event_handler('http_server', 'urls_to_check')
     def check_urls(self, urls):
         log('Checking {length} URLs'.format(length=len(urls)))
-        futures = (session.head(url) for url in urls)
-        for url, future in zip(urls, futures):
-            try:
-                response = future.result()
-            except requests.exceptions.ConnectionError:
-                response = FakeResponse(status_code=503, headers={})
-            except Exception, e:
-                logbook.error('Error with {url}: {e}'.format(url=url, e=e))
-            url_hash = generate_hash(url)
-            self.store_data(url, url_hash, response)
+        for url in urls:
+            self.check_url(url)

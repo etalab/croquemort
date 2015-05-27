@@ -1,5 +1,4 @@
 Logbook==0.9.1
 nameko==2.1.1
 redis==2.10.3
-requests-futures==0.9.5
 wrapt==1.10.4
