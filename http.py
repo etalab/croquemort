@@ -6,7 +6,7 @@ from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
 
-from tools import chunks, generate_hash, required_parameters
+from tools import generate_hash, required_parameters
 
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 log = logbook.debug
@@ -65,23 +65,11 @@ class HttpService(object):
         group = data.get('group')
         group_hash = generate_hash(group)
         log('Checking "{group}" ({hash})'.format(group=group, hash=group_hash))
-        self.fetch_many(urls, group)
+        for url in urls:
+            self.fetch(url, group)
         return json.dumps({'group-hash': group_hash}, indent=2)
 
     @rpc
-    def fetch(self, url):
-        log('Checking {url}'.format(url=url))
-        self.dispatch('url_to_check', url)
-
-    @rpc
-    def fetch_many(self, urls, group):
-        log('Checking {length} URLs'.format(length=len(urls)))
-        group_hash = generate_hash(group)
-        for url in urls:
-            url_hash = generate_hash(url)
-            r.hset(url_hash, 'group', group_hash)
-            r.hset(group_hash, 'name', group)
-            r.hset(group_hash, url_hash, url)
-            r.hset(url_hash, 'url', url)
-        for chunk in chunks(urls, 100):
-            self.dispatch('urls_to_check', chunk)
+    def fetch(self, url, group=None):
+        log('Checking {url} with group "{group}"'.format(url=url, group=group))
+        self.dispatch('url_to_check', (url, group))

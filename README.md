@@ -52,6 +52,12 @@ starting services: url_crawler
 Connected to amqp://guest:**@127.0.0.1:5672//
 ```
 
+You can optionnaly use the proposed configuration with more workers for the crawler (from 10 (default) to 50):
+
+```shell
+$ nameko run --config config_crawler.yaml crawler
+```
+
 
 ### Fetching one URL
 

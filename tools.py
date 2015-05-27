@@ -8,6 +8,8 @@ log = logbook.debug
 def required_parameters(*parameters):
     """A decorator for views with required parameters.
 
+    Returns a 400 if parameters are not provided by the client.
+
     Warning: when applied, it turns the request object into a data one,
     as first parameter of the returned function to avoid parsing the
     JSON data twice.
@@ -33,12 +35,3 @@ def generate_hash(value):
     See http://stackoverflow.com/a/2688025 for details.
     """
     return hash(value) & ((1 << 32)-1)
-
-
-def chunks(l, n):
-    """ Yield successive n-sized chunks from l.
-
-    See http://stackoverflow.com/a/312464 for details.
-    """
-    for i in xrange(0, len(l), n):
-        yield l[i:i+n]

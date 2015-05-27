@@ -14,8 +14,9 @@ parser.add_argument('--group')
 args = parser.parse_args()
 
 with ClusterRpcProxy(config) as cluster_rpc:
-    urls = [line.strip('\n') for line in args.csvfile]
-    cluster_rpc.http_server.fetch_many.async(urls, args.group or None)
+    for line in args.csvfile:
+        url = line.strip('\n')
+        cluster_rpc.http_server.fetch.async(url, args.group or None)
 
 if args.group:
     print('Group hash: {hash}'.format(hash=generate_hash(args.group)))
