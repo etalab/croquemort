@@ -209,6 +209,26 @@ Group hash: 2752262332
 The script returns a group hash that you can use through the HTTP interface as documented above.
 
 
+### Frequencies
+
+You may want to periodically check existing groups of URLs in the background. In that case launch the `timer` service:
+
+```shell
+$ nameko run timer
+starting services: timer
+Connected to amqp://guest:**@127.0.0.1:5672//
+```
+
+You can now specify a `frequency` parameter when you `POST` against `/check/many` or when you launch the command via the shell:
+
+```shell
+$ python example_csv.py --csvfile path/to/your/file.csv --group groupname --frequency hourly
+Group hash: 2752262332
+```
+
+There are three possibilities: "hourly", "daily" and "monthly". If you don't specify any you'll have to refresh URL checks manually. The `timer` service will check groups with associated frequencies and refresh associated URLs accordingly
+
+
 ## Contributing
 
 We’re really happy to accept contributions from the community, that’s the main reason why we open-sourced it! There are many ways to contribute, even if you’re not a technical person.

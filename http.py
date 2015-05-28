@@ -46,9 +46,9 @@ class HttpService(object):
             if filters:
                 if all(url_infos.get(prop, None) == value
                        for prop, value in filters.iteritems()):
-                    infos[url] = url_infos
+                    infos[url_hash] = url_infos
             else:
-                infos[url] = url_infos
+                infos[url_hash] = url_infos
         return json.dumps(infos, indent=2)
 
     @http('POST', '/check/one')
@@ -66,12 +66,14 @@ class HttpService(object):
         urls = data.get('urls')
         group = data.get('group')
         group_hash = generate_hash(group)
-        log('Checking "{group}" ({hash})'.format(group=group, hash=group_hash))
+        frequency = data.get('frequency', None)
+        log(('Checking "{group}" ({hash}) with frequency "{frequency}"'
+             .format(group=group, hash=group_hash, frequency=frequency)))
         for url in urls:
-            self.fetch(url, group)
+            self.fetch(url, group, frequency)
         return json.dumps({'group-hash': group_hash}, indent=2)
 
     @rpc
-    def fetch(self, url, group=None):
-        log('Checking {url} with group "{group}"'.format(url=url, group=group))
-        self.dispatch('url_to_check', (url, group))
+    def fetch(self, url, group=None, frequency=None):
+        log('Checking {url} for group "{group}"'.format(url=url, group=group))
+        self.dispatch('url_to_check', (url, group, frequency))

@@ -20,12 +20,16 @@ class CrawlerService(object):
     logger = LoggingDependency()
 
     @event_handler('http_server', 'url_to_check')
-    def check_url(self, url_group):
-        url, group = url_group
-        log('Checking {url} for group {group}'.format(url=url, group=group))
+    @event_handler('timer', 'url_to_check')
+    def check_url(self, url_group_frequency):
+        url, group, frequency = url_group_frequency
+        log(('Checking {url} for group {group} and frequency "{frequency}"'
+             .format(url=url, group=group, frequency=frequency)))
         self.storage.store_url(url)
         if group:
             self.storage.store_group(url, group)
+            if frequency:
+                self.storage.store_frequency(url, group, frequency)
         try:
             response = session.head(url)
         except requests.exceptions.ConnectionError:
