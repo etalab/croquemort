@@ -199,10 +199,10 @@ Note that in both cases, the `http` and the `crawler` services return interestin
 
 ### Computing many URLs
 
-You can programmatically register new URLs and groups using the RPC proxy. There is an example within the `test_csv.py` file which computes URLs from a CSV file (one URL per line).
+You can programmatically register new URLs and groups using the RPC proxy. There is an example within the `example_csv.py` file which computes URLs from a CSV file (one URL per line).
 
 ```shell
-$ python test_csv.py --csvfile path/to/your/file.csv --group groupname
+$ python example_csv.py --csvfile path/to/your/file.csv --group groupname
 Group hash: 2752262332
 ```
 

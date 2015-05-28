@@ -1,20 +1,22 @@
 import json
 import logbook
-import redis
 
 from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
 
+from logger import LoggingDependency
+from storages import RedisStorage
 from tools import generate_hash, required_parameters
 
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
 log = logbook.debug
 
 
 class HttpService(object):
     name = 'http_server'
     dispatch = EventDispatcher()
+    storage = RedisStorage()
+    logger = LoggingDependency(interval='ms')
 
     @http('GET', '/url')
     @required_parameters('url')
@@ -26,7 +28,7 @@ class HttpService(object):
     @http('GET', '/url/<int:url_hash>')
     def retrieve_url_from_hash(self, request, url_hash):
         log('Retrieving url {hash}'.format(hash=url_hash))
-        url_infos = r.hgetall(url_hash)
+        url_infos = self.storage.get_url(url_hash)
         log('Grabing {infos}'.format(infos=url_infos))
         return json.dumps(url_infos, indent=2)
 
@@ -37,10 +39,10 @@ class HttpService(object):
         filters = {k.lstrip('filter_'): v for (k, v) in data.iteritems()}
         if filters:
             log('Filtering results by {filters}'.format(filters=filters))
-        group_infos = r.hgetall(group_hash)
+        group_infos = self.storage.get_group(group_hash)
         infos = {'name': group_infos.pop('name')}
         for url_hash, url in group_infos.iteritems():
-            url_infos = r.hgetall(url_hash)
+            url_infos = self.storage.get_url(url_hash)
             if filters:
                 if all(url_infos.get(prop, None) == value
                        for prop, value in filters.iteritems()):
