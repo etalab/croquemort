@@ -3,14 +3,22 @@ from datetime import datetime
 import redis
 from nameko.extensions import DependencyProvider
 
-from tools import generate_hash
+from .tools import generate_hash
 
 
 class RedisStorage(DependencyProvider):
-    headers = ('etag', 'last-modified', 'content-type', 'content-length')
+    headers = (
+        'etag', 'expires', 'last-modified',
+        'content-type', 'content-length', 'content-disposition',
+        'content-md5', 'content-encoding', 'content-location'
+    )
 
     def __init__(self):
-        self.database = redis.StrictRedis(host='localhost', port=6379, db=0)
+        self.database = redis.StrictRedis(host='localhost',
+                                          port=6379,
+                                          db=0,
+                                          decode_responses=True,
+                                          charset='utf-8')
 
     def get_dependency(self, worker_ctx):
         return self

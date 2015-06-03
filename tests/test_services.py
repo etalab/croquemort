@@ -4,8 +4,8 @@ from nameko.standalone.events import event_dispatcher
 from nameko.testing.utils import get_container
 from nameko.testing.services import entrypoint_waiter, replace_dependencies
 
-from crawler import CrawlerService
-from http import HttpService
+from croquemort.crawler import CrawlerService
+from croquemort.http import HttpService
 
 
 @pytest.yield_fixture

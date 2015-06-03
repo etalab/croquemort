@@ -4,8 +4,8 @@ import requests
 
 from nameko.events import event_handler
 
-from logger import LoggingDependency
-from storages import RedisStorage
+from .logger import LoggingDependency
+from .storages import RedisStorage
 
 log = logbook.debug
 FakeResponse = collections.namedtuple('Response', ['status_code', 'headers'])
@@ -34,6 +34,6 @@ class CrawlerService(object):
             response = session.head(url)
         except requests.exceptions.ConnectionError:
             response = FakeResponse(status_code=503, headers={})
-        except Exception, e:
+        except Exception as e:
             logbook.error('Error with {url}: {e}'.format(url=url, e=e))
         self.storage.store_metadata(url, response)

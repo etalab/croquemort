@@ -1,4 +1,6 @@
 import json
+import hashlib
+
 import logbook
 import wrapt
 
@@ -18,7 +20,7 @@ def required_parameters(*parameters):
     def wrapper(wrapped, instance, args, kwargs):
         args = list(args)
         request = args[0]
-        data = json.loads(request.get_data() or '{}')
+        data = json.loads(request.get_data().decode('utf-8') or '{}')
         for parameter in parameters:
             if parameter not in data:
                 log(('"{parameter}" parameter not found in {data}'
@@ -30,8 +32,5 @@ def required_parameters(*parameters):
 
 
 def generate_hash(value):
-    """Custom hash to avoid negative values.
-
-    See http://stackoverflow.com/a/2688025 for details.
-    """
-    return hash(value) & ((1 << 32)-1)
+    """Custom hash to avoid long values."""
+    return hashlib.md5(value.encode('utf-8')).hexdigest()[:8]

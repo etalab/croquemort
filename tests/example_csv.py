@@ -2,7 +2,7 @@ import argparse
 
 from nameko.standalone.rpc import ClusterRpcProxy
 
-from tools import generate_hash
+from croquemort.tools import generate_hash
 
 config = {
     'AMQP_URI': 'amqp://guest:guest@localhost'

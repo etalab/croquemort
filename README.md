@@ -28,7 +28,9 @@ We’re using these technologies: RabbitMQ and Redis. You have to install and la
 Once installed, run these commands to setup the project:
 
 ```shell
-$ pip install -r requirements.txt
+$ python3.4 -m venv ~/.virtualenvs/croquemort
+$ source ~/.virtualenvs/croquemort/bin/activate
+$ pip3.4 install -r requirements.txt
 ```
 
 You're good to go!
@@ -69,7 +71,7 @@ HTTP/1.1 200 OK
 Connection: keep-alive
 Content-Length: 28
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 26 May 2015 15:13:16 GMT
+Date: Wed, 03 Jun 2015 10:43:51 GMT
 
 {
   "url-hash": 2320457535
@@ -82,14 +84,20 @@ The service returns a URL hash that will be used to retrieve informations relate
 $ http :8000/url/2320457535
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 174
+Content-Length: 346
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 26 May 2015 15:13:27 GMT
+Date: Wed, 03 Jun 2015 10:44:23 GMT
 
 {
   "status": "200", 
-  "content-length": "", 
+  "updated": "2015-06-03T12:44:23.643436", 
+  "content-location": "", 
+  "content-disposition": "", 
+  "content-encoding": "gzip", 
   "url": "https://www.data.gouv.fr/fr/", 
+  "expires": "", 
+  "content-length": "", 
+  "content-md5": "", 
   "last-modified": "", 
   "etag": "", 
   "content-type": "text/html; charset=utf-8"
@@ -102,15 +110,20 @@ Or you can use the URL passed as a GET parameter (less error prone):
 $ http GET :8000/url url=https://www.data.gouv.fr/fr/
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 200
+Content-Length: 346
 Content-Type: text/plain; charset=utf-8
-Date: Wed, 27 May 2015 11:03:36 GMT
+Date: Wed, 03 Jun 2015 10:44:46 GMT
 
 {
   "status": "200", 
-  "content-length": "", 
-  "group": "2651198169", 
+  "updated": "2015-06-03T12:44:23.643436", 
+  "content-location": "", 
+  "content-disposition": "", 
+  "content-encoding": "gzip", 
   "url": "https://www.data.gouv.fr/fr/", 
+  "expires": "", 
+  "content-length": "", 
+  "content-md5": "", 
   "last-modified": "", 
   "etag": "", 
   "content-type": "text/html; charset=utf-8"
@@ -130,7 +143,7 @@ HTTP/1.1 200 OK
 Connection: keep-alive
 Content-Length: 30
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 26 May 2015 15:13:56 GMT
+Date: Wed, 03 Jun 2015 10:45:09 GMT
 
 {
   "group-hash": 2651198169
@@ -143,30 +156,43 @@ This time, the service returns a group hash that will be used to retrieve inform
 $ http :8000/group/2651198169
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 724
+Content-Length: 988
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 26 May 2015 15:14:18 GMT
+Date: Wed, 03 Jun 2015 10:45:26 GMT
 
 {
-  "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png": {
+  "2320457535": {
     "status": "200", 
-    "content-length": "280919", 
+    "updated": "2015-06-03T12:45:12.580935", 
     "group": "2651198169", 
+    "content-location": "", 
+    "content-disposition": "", 
+    "content-encoding": "gzip", 
+    "url": "https://www.data.gouv.fr/fr/", 
+    "expires": "", 
+    "content-length": "", 
+    "content-md5": "", 
+    "last-modified": "", 
+    "etag": "", 
+    "content-type": "text/html; charset=utf-8"
+  }, 
+  "url": {}, 
+  "940966339": {
+    "status": "200", 
+    "updated": "2015-06-03T12:45:10.472011", 
+    "group": "2651198169", 
+    "content-location": "", 
+    "content-disposition": "", 
+    "content-encoding": "", 
     "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png", 
+    "expires": "", 
+    "content-length": "280919", 
+    "content-md5": "", 
     "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT", 
     "etag": "\"551ab16d-44957\"", 
     "content-type": "image/png"
   }, 
-  "name": "datagouvfr", 
-  "https://www.data.gouv.fr/fr/": {
-    "status": "200", 
-    "content-length": "", 
-    "group": "2651198169", 
-    "url": "https://www.data.gouv.fr/fr/", 
-    "last-modified": "", 
-    "etag": "", 
-    "content-type": "text/html; charset=utf-8"
-  }
+  "name": "datagouvfr"
 }
 ```
 
@@ -176,16 +202,52 @@ You can filter results returned for a given group by header (or status) with the
 $ http GET :8000/group/2651198169 filter_content-type="image/png"
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 471
+Content-Length: 555
 Content-Type: text/plain; charset=utf-8
-Date: Wed, 27 May 2015 10:55:10 GMT
+Date: Wed, 03 Jun 2015 10:46:07 GMT
 
 {
-  "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png": {
+  "940966339": {
     "status": "200", 
-    "content-length": "280919", 
+    "updated": "2015-06-03T12:45:10.472011", 
     "group": "2651198169", 
+    "content-location": "", 
+    "content-disposition": "", 
+    "content-encoding": "", 
     "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png", 
+    "expires": "", 
+    "content-length": "280919", 
+    "content-md5": "", 
+    "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT", 
+    "etag": "\"551ab16d-44957\"", 
+    "content-type": "image/png"
+  }, 
+  "name": "datagouvfr"
+}
+```
+
+You can exclude results returned for a given group by header (or status) with the `exclude_` prefix:
+
+```shell
+$ http GET :8000/group/2651198169 exclude_content-length=""
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Length: 555
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 03 Jun 2015 12:06:35 GMT
+
+{
+  "940966339": {
+    "status": "200", 
+    "updated": "2015-06-03T12:45:10.472011", 
+    "group": "2651198169", 
+    "content-location": "", 
+    "content-disposition": "", 
+    "content-encoding": "", 
+    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png", 
+    "expires": "", 
+    "content-length": "280919", 
+    "content-md5": "", 
     "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT", 
     "etag": "\"551ab16d-44957\"", 
     "content-type": "image/png"
@@ -202,7 +264,7 @@ Note that in both cases, the `http` and the `crawler` services return interestin
 You can programmatically register new URLs and groups using the RPC proxy. There is an example within the `example_csv.py` file which computes URLs from a CSV file (one URL per line).
 
 ```shell
-$ python example_csv.py --csvfile path/to/your/file.csv --group groupname
+$ PYTHONPATH=. python tests/example_csv.py --csvfile path/to/your/file.csv --group groupname
 Group hash: 2752262332
 ```
 
@@ -222,7 +284,7 @@ Connected to amqp://guest:**@127.0.0.1:5672//
 You can now specify a `frequency` parameter when you `POST` against `/check/many` or when you launch the command via the shell:
 
 ```shell
-$ python example_csv.py --csvfile path/to/your/file.csv --group groupname --frequency hourly
+$ PYTHONPATH=. python example_csv.py --csvfile path/to/your/file.csv --group groupname --frequency hourly
 Group hash: 2752262332
 ```
 

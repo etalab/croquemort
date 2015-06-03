@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from http import HttpService
+from croquemort.http import HttpService
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def test_post_url(web_session):
     rv = web_session.post('/check/one', data=json.dumps({
         'url': 'http://example.org'
     }))
-    assert rv.text == '{\n  "url-hash": 2039066596\n}'
+    assert rv.text == '{\n  "url-hash": "dab521de"\n}'
 
 
 def test_missing_parameter(web_session):

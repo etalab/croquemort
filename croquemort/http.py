@@ -5,9 +5,9 @@ from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
 
-from logger import LoggingDependency
-from storages import RedisStorage
-from tools import generate_hash, required_parameters
+from .logger import LoggingDependency
+from .storages import RedisStorage
+from .tools import generate_hash, required_parameters
 
 log = logbook.debug
 
@@ -35,17 +35,32 @@ class HttpService(object):
     @http('GET', '/group/<int:group_hash>')
     def retrieve_group_from_hash(self, request, group_hash):
         log('Retrieving group {hash}'.format(hash=group_hash))
-        data = json.loads(request.get_data() or '{}')
-        filters = {k.lstrip('filter_'): v for (k, v) in data.iteritems()}
+        data = json.loads(request.get_data().decode('utf-8') or '{}')
+        filter_prefix = 'filter_'
+        exclude_prefix = 'exclude_'
+        filters = {k[len(filter_prefix):]: v
+                   for (k, v) in data.items()
+                   if k.startswith(filter_prefix)}
+        excludes = {k[len(exclude_prefix):]: v
+                    for (k, v) in data.items()
+                    if k.startswith(exclude_prefix)}
         if filters:
             log('Filtering results by {filters}'.format(filters=filters))
+        elif excludes:
+            log('Excluding results by {excludes}'.format(excludes=excludes))
         group_infos = self.storage.get_group(group_hash)
         infos = {'name': group_infos.pop('name')}
-        for url_hash, url in group_infos.iteritems():
+        for url_hash, url in group_infos.items():
             url_infos = self.storage.get_url(url_hash)
             if filters:
-                if all(url_infos.get(prop, None) == value
-                       for prop, value in filters.iteritems()):
+                if all(url_infos.get(prop) == value
+                       for prop, value in filters.items()):
+                    infos[url_hash] = url_infos
+            elif excludes:
+                if all(prop in url_infos
+                       and url_infos.get(prop) != value
+                       and url_infos.get(prop) is not None
+                       for prop, value in excludes.items()):
                     infos[url_hash] = url_infos
             else:
                 infos[url_hash] = url_infos

@@ -3,8 +3,8 @@ import logbook
 from nameko.events import EventDispatcher
 from nameko.timer import timer
 
-from logger import LoggingDependency
-from storages import RedisStorage
+from .logger import LoggingDependency
+from .storages import RedisStorage
 
 log = logbook.debug
 
