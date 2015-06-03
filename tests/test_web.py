@@ -16,7 +16,28 @@ def test_get_url(web_session):
     rv = web_session.get('/url', data=json.dumps({
         'url': 'http://example.org'
     }))
-    assert rv.text == '{}'
+    assert rv.text == ''
+    assert rv.status_code == 404
+
+
+def test_get_group(web_session):
+    rv = web_session.get('/group', data=json.dumps({
+        'group': 'mygroup'
+    }))
+    assert rv.text == ''
+    assert rv.status_code == 404
+
+
+def test_get_url_from_hash(web_session):
+    rv = web_session.get('/url/myhash')
+    assert rv.text == ''
+    assert rv.status_code == 404
+
+
+def test_get_group_from_hash(web_session):
+    rv = web_session.get('/group/myhash')
+    assert rv.text == ''
+    assert rv.status_code == 404
 
 
 def test_post_url(web_session):

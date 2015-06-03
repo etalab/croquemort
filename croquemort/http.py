@@ -22,20 +22,33 @@ class HttpService(object):
     @required_parameters('url')
     def retrieve_url(self, data):
         url = data.get('url')
-        log('Retrieving {url}'.format(url=url))
+        log('Retrieving url {url}'.format(url=url))
         return self.retrieve_url_from_hash(data, generate_hash(url))
 
-    @http('GET', '/url/<int:url_hash>')
-    def retrieve_url_from_hash(self, request, url_hash):
-        log('Retrieving url {hash}'.format(hash=url_hash))
+    @http('GET', '/url/<url_hash>')
+    def retrieve_url_from_hash(self, request_or_data, url_hash):
+        log('Retrieving url hash {hash}'.format(hash=url_hash))
         url_infos = self.storage.get_url(url_hash)
+        if not url_infos:
+            return 404, ''
         log('Grabing {infos}'.format(infos=url_infos))
         return json.dumps(url_infos, indent=2)
 
-    @http('GET', '/group/<int:group_hash>')
-    def retrieve_group_from_hash(self, request, group_hash):
-        log('Retrieving group {hash}'.format(hash=group_hash))
-        data = json.loads(request.get_data().decode('utf-8') or '{}')
+    @http('GET', '/group')
+    @required_parameters('group')
+    def retrieve_group(self, data):
+        group = data.get('group')
+        log('Retrieving group {group}'.format(group=group))
+        return self.retrieve_group_from_hash(data, generate_hash(group))
+
+    @http('GET', '/group/<group_hash>')
+    def retrieve_group_from_hash(self, request_or_data, group_hash):
+        log('Retrieving group hash {hash}'.format(hash=group_hash))
+        if isinstance(request_or_data, dict):
+            data = request_or_data
+        else:
+            request_data = request_or_data.get_data().decode('utf-8')
+            data = json.loads(request_data or '{}')
         filter_prefix = 'filter_'
         exclude_prefix = 'exclude_'
         filters = {k[len(filter_prefix):]: v
@@ -49,6 +62,9 @@ class HttpService(object):
         elif excludes:
             log('Excluding results by {excludes}'.format(excludes=excludes))
         group_infos = self.storage.get_group(group_hash)
+        if not group_infos:
+            return 404, ''
+        group_infos.pop('url')
         infos = {'name': group_infos.pop('name')}
         for url_hash, url in group_infos.items():
             url_infos = self.storage.get_url(url_hash)

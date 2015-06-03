@@ -41,7 +41,7 @@ You're good to go!
 First you have to run the `http` service in order to receive incoming HTTP calls. You can run it with this command:
 
 ```shell
-$ nameko run http
+$ nameko run croquemort.http
 starting services: http_server
 Connected to amqp://guest:**@127.0.0.1:5672//
 ```
@@ -49,7 +49,7 @@ Connected to amqp://guest:**@127.0.0.1:5672//
 Then launch the `crawler` in a new shell that will fetch the submitted URL in the background.
 
 ```shell
-$ nameko run crawler
+$ nameko run croquemort.crawler
 starting services: url_crawler
 Connected to amqp://guest:**@127.0.0.1:5672//
 ```
@@ -57,7 +57,7 @@ Connected to amqp://guest:**@127.0.0.1:5672//
 You can optionnaly use the proposed configuration with more workers for the crawler (from 10 (default) to 50):
 
 ```shell
-$ nameko run --config config_crawler.yaml crawler
+$ nameko run --config config_crawler.yaml croquemort.crawler
 ```
 
 
@@ -71,35 +71,35 @@ HTTP/1.1 200 OK
 Connection: keep-alive
 Content-Length: 28
 Content-Type: text/plain; charset=utf-8
-Date: Wed, 03 Jun 2015 10:43:51 GMT
+Date: Wed, 03 Jun 2015 14:21:50 GMT
 
 {
-  "url-hash": 2320457535
+  "url-hash": "fc6040c5"
 }
 ```
 
 The service returns a URL hash that will be used to retrieve informations related to that URL:
 
 ```shell
-$ http :8000/url/2320457535
+$ http :8000/url/fc6040c5
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 346
+Content-Length: 335
 Content-Type: text/plain; charset=utf-8
-Date: Wed, 03 Jun 2015 10:44:23 GMT
+Date: Wed, 03 Jun 2015 14:22:57 GMT
 
 {
-  "status": "200", 
-  "updated": "2015-06-03T12:44:23.643436", 
-  "content-location": "", 
-  "content-disposition": "", 
-  "content-encoding": "gzip", 
-  "url": "https://www.data.gouv.fr/fr/", 
-  "expires": "", 
-  "content-length": "", 
-  "content-md5": "", 
-  "last-modified": "", 
-  "etag": "", 
+  "etag": "",
+  "url": "https://www.data.gouv.fr/fr/",
+  "content-length": "",
+  "content-disposition": "",
+  "content-md5": "",
+  "content-location": "",
+  "expires": "",
+  "status": "200",
+  "updated": "2015-06-03T16:21:52.569974",
+  "last-modified": "",
+  "content-encoding": "gzip",
   "content-type": "text/html; charset=utf-8"
 }
 ```
@@ -110,22 +110,22 @@ Or you can use the URL passed as a GET parameter (less error prone):
 $ http GET :8000/url url=https://www.data.gouv.fr/fr/
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 346
+Content-Length: 335
 Content-Type: text/plain; charset=utf-8
-Date: Wed, 03 Jun 2015 10:44:46 GMT
+Date: Wed, 03 Jun 2015 14:23:35 GMT
 
 {
-  "status": "200", 
-  "updated": "2015-06-03T12:44:23.643436", 
-  "content-location": "", 
-  "content-disposition": "", 
-  "content-encoding": "gzip", 
-  "url": "https://www.data.gouv.fr/fr/", 
-  "expires": "", 
-  "content-length": "", 
-  "content-md5": "", 
-  "last-modified": "", 
-  "etag": "", 
+  "etag": "",
+  "url": "https://www.data.gouv.fr/fr/",
+  "content-length": "",
+  "content-disposition": "",
+  "content-md5": "",
+  "content-location": "",
+  "expires": "",
+  "status": "200",
+  "updated": "2015-06-03T16:21:52.569974",
+  "last-modified": "",
+  "content-encoding": "gzip",
   "content-type": "text/html; charset=utf-8"
 }
 ```
@@ -143,85 +143,115 @@ HTTP/1.1 200 OK
 Connection: keep-alive
 Content-Length: 30
 Content-Type: text/plain; charset=utf-8
-Date: Wed, 03 Jun 2015 10:45:09 GMT
+Date: Wed, 03 Jun 2015 14:24:00 GMT
 
 {
-  "group-hash": 2651198169
+  "group-hash": "efcf3897"
 }
 ```
 
 This time, the service returns a group hash that will be used to retrieve informations related to that group:
 
 ```shell
-$ http :8000/group/2651198169
+$ http :8000/group/efcf3897
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 988
+Content-Length: 941
 Content-Type: text/plain; charset=utf-8
-Date: Wed, 03 Jun 2015 10:45:26 GMT
+Date: Wed, 03 Jun 2015 14:26:04 GMT
 
 {
-  "2320457535": {
-    "status": "200", 
-    "updated": "2015-06-03T12:45:12.580935", 
-    "group": "2651198169", 
-    "content-location": "", 
-    "content-disposition": "", 
-    "content-encoding": "gzip", 
-    "url": "https://www.data.gouv.fr/fr/", 
-    "expires": "", 
-    "content-length": "", 
-    "content-md5": "", 
-    "last-modified": "", 
-    "etag": "", 
-    "content-type": "text/html; charset=utf-8"
-  }, 
-  "url": {}, 
-  "940966339": {
-    "status": "200", 
-    "updated": "2015-06-03T12:45:10.472011", 
-    "group": "2651198169", 
-    "content-location": "", 
-    "content-disposition": "", 
-    "content-encoding": "", 
-    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png", 
-    "expires": "", 
-    "content-length": "280919", 
-    "content-md5": "", 
-    "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT", 
-    "etag": "\"551ab16d-44957\"", 
-    "content-type": "image/png"
-  }, 
-  "name": "datagouvfr"
+  "179d104f": {
+    "content-encoding": "",
+    "content-disposition": "",
+    "group": "efcf3897",
+    "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT",
+    "content-md5": "",
+    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
+    "status": "200",
+    "expires": "",
+    "content-type": "image/png",
+    "content-length": "280919",
+    "updated": "2015-06-03T16:24:00.405636",
+    "etag": "\"551ab16d-44957\"",
+    "content-location": ""
+  },
+  "name": "datagouvfr",
+  "fc6040c5": {
+    "content-disposition": "",
+    "content-encoding": "gzip",
+    "group": "efcf3897",
+    "last-modified": "",
+    "content-md5": "",
+    "content-location": "",
+    "content-length": "",
+    "expires": "",
+    "content-type": "text/html; charset=utf-8",
+    "status": "200",
+    "updated": "2015-06-03T16:24:02.398105",
+    "etag": "",
+    "url": "https://www.data.gouv.fr/fr/"
+  }
 }
 ```
+
+Or you can use the group name passed as a GET parameter (less error prone):
+
+```shell
+$ http GET :8000/group/ group=datagouvfr
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Length: 335
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 03 Jun 2015 14:23:35 GMT
+
+{
+  "etag": "",
+  "url": "https://www.data.gouv.fr/fr/",
+  "content-length": "",
+  "content-disposition": "",
+  "content-md5": "",
+  "content-location": "",
+  "expires": "",
+  "status": "200",
+  "updated": "2015-06-03T16:21:52.569974",
+  "last-modified": "",
+  "content-encoding": "gzip",
+  "content-type": "text/html; charset=utf-8"
+}
+```
+
+Both return the same amount of information.
+
+
+### Filtering results
 
 You can filter results returned for a given group by header (or status) with the `filter_` prefix:
 
 ```shell
-$ http GET :8000/group/2651198169 filter_content-type="image/png"
+$ http GET :8000/group/efcf3897 filter_content-type="image/png"
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 555
+Content-Length: 539
 Content-Type: text/plain; charset=utf-8
-Date: Wed, 03 Jun 2015 10:46:07 GMT
+Date: Wed, 03 Jun 2015 14:27:07 GMT
 
 {
-  "940966339": {
-    "status": "200", 
-    "updated": "2015-06-03T12:45:10.472011", 
-    "group": "2651198169", 
-    "content-location": "", 
-    "content-disposition": "", 
-    "content-encoding": "", 
-    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png", 
-    "expires": "", 
-    "content-length": "280919", 
-    "content-md5": "", 
-    "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT", 
-    "etag": "\"551ab16d-44957\"", 
-    "content-type": "image/png"
-  }, 
+  "179d104f": {
+    "content-encoding": "",
+    "content-disposition": "",
+    "group": "efcf3897",
+    "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT",
+    "content-md5": "",
+    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
+    "status": "200",
+    "expires": "",
+    "content-type": "image/png",
+    "content-length": "280919",
+    "updated": "2015-06-03T16:24:00.405636",
+    "etag": "\"551ab16d-44957\"",
+    "content-location": ""
+  },
   "name": "datagouvfr"
 }
 ```
@@ -229,29 +259,29 @@ Date: Wed, 03 Jun 2015 10:46:07 GMT
 You can exclude results returned for a given group by header (or status) with the `exclude_` prefix:
 
 ```shell
-$ http GET :8000/group/2651198169 exclude_content-length=""
+$ http GET :8000/group/efcf3897 exclude_content-length=""
 HTTP/1.1 200 OK
 Connection: keep-alive
-Content-Length: 555
+Content-Length: 539
 Content-Type: text/plain; charset=utf-8
-Date: Wed, 03 Jun 2015 12:06:35 GMT
+Date: Wed, 03 Jun 2015 14:27:58 GMT
 
 {
-  "940966339": {
-    "status": "200", 
-    "updated": "2015-06-03T12:45:10.472011", 
-    "group": "2651198169", 
-    "content-location": "", 
-    "content-disposition": "", 
-    "content-encoding": "", 
-    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png", 
-    "expires": "", 
-    "content-length": "280919", 
-    "content-md5": "", 
-    "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT", 
-    "etag": "\"551ab16d-44957\"", 
-    "content-type": "image/png"
-  }, 
+  "179d104f": {
+    "content-encoding": "",
+    "content-disposition": "",
+    "group": "efcf3897",
+    "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT",
+    "content-md5": "",
+    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
+    "status": "200",
+    "expires": "",
+    "content-type": "image/png",
+    "content-length": "280919",
+    "updated": "2015-06-03T16:24:00.405636",
+    "etag": "\"551ab16d-44957\"",
+    "content-location": ""
+  },
   "name": "datagouvfr"
 }
 ```
@@ -276,7 +306,7 @@ The script returns a group hash that you can use through the HTTP interface as d
 You may want to periodically check existing groups of URLs in the background. In that case launch the `timer` service:
 
 ```shell
-$ nameko run timer
+$ nameko run croquemort.timer
 starting services: timer
 Connected to amqp://guest:**@127.0.0.1:5672//
 ```
