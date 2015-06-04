@@ -34,3 +34,36 @@ def required_parameters(*parameters):
 def generate_hash(value):
     """Custom hash to avoid long values."""
     return hashlib.md5(value.encode('utf-8')).hexdigest()[:8]
+
+
+def extract_filters(querystring_dict):
+    """Extracting filters and excludes from the querystring."""
+    filter_prefix = 'filter_'
+    exclude_prefix = 'exclude_'
+    filters = {k[len(filter_prefix):]: v
+               for (k, v) in querystring_dict.items()
+               if k.startswith(filter_prefix)}
+    excludes = {k[len(exclude_prefix):]: v
+                for (k, v) in querystring_dict.items()
+                if k.startswith(exclude_prefix)}
+    if filters:
+        log('Filtering results by {filters}'.format(filters=filters))
+    if excludes:
+        log('Excluding results by {excludes}'.format(excludes=excludes))
+    return filters, excludes
+
+
+def apply_filters(results, filters, excludes):
+    """Return filtered results."""
+    if filters:
+        if all(results.get(prop) == value
+               for prop, value in filters.items()):
+            return results
+    elif excludes:
+        if all(results.get(prop) != value
+               and results.get(prop) is not None
+               for prop, value in excludes.items()
+               if prop in results):
+            return results
+    else:
+        return results

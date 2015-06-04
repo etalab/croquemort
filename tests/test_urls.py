@@ -44,7 +44,17 @@ def test_post_url(web_session):
     rv = web_session.post('/check/one', data=json.dumps({
         'url': 'http://example.org'
     }))
-    assert rv.text == '{\n  "url-hash": "dab521de"\n}'
+    assert rv.json()['url-hash'] == 'dab521de'
+    assert rv.status_code == 200
+
+
+def test_post_urls(web_session):
+    rv = web_session.post('/check/many', data=json.dumps({
+        'urls': ['http://example.org', 'http://example.com'],
+        'group': 'datagouvfr'
+    }))
+    assert rv.json()['group-hash'] == 'efcf3897'
+    assert rv.status_code == 200
 
 
 def test_missing_parameter(web_session):
