@@ -20,7 +20,11 @@ def required_parameters(*parameters):
     def wrapper(wrapped, instance, args, kwargs):
         args = list(args)
         request = args[0]
-        data = json.loads(request.get_data().decode('utf-8') or '{}')
+        raw = request.get_data().decode('utf-8')
+        try:
+            data = json.loads(raw or '{}')
+        except ValueError as error:
+            return 400, 'Incorrect parameters: {error}'.format(error=error)
         for parameter in parameters:
             if parameter not in data:
                 log(('"{parameter}" parameter not found in {data}'
