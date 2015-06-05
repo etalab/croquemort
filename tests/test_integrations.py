@@ -30,6 +30,17 @@ def runner_factory(rabbit_config):
             pass
 
 
+def test_retrieve_urls(runner_factory, web_session):
+    runner = runner_factory(HttpService)
+    http_container = get_container(runner, HttpService)
+    storage = replace_dependencies(http_container, 'storage')
+    storage.get_url = lambda url_hash: {'url': url_hash}
+    storage.get_all_urls = lambda: (('hash', 'url'),)
+    runner.start()
+    rv = web_session.get('/')
+    assert rv.json()['hash'] == {'url': 'hash'}
+
+
 def test_retrieve_url(runner_factory, web_session):
     runner = runner_factory(HttpService)
     http_container = get_container(runner, HttpService)

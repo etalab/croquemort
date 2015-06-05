@@ -8,7 +8,8 @@ from nameko.web.handlers import http
 from .logger import LoggingDependency
 from .storages import RedisStorage
 from .tools import (
-    apply_filters, extract_filters, generate_hash, required_parameters
+    apply_filters, data_from_request, extract_filters, generate_hash,
+    required_parameters
 )
 
 log = logbook.debug
@@ -44,13 +45,12 @@ class HttpService(object):
         return self.retrieve_group_from_hash(data, generate_hash(group))
 
     @http('GET', '/group/<group_hash>')
-    def retrieve_group_from_hash(self, request_or_data, group_hash):
+    def retrieve_group_from_hash(self, request, group_hash):
         log('Retrieving group hash {hash}'.format(hash=group_hash))
-        if isinstance(request_or_data, dict):
-            data = request_or_data
-        else:
-            request_data = request_or_data.get_data().decode('utf-8')
-            data = json.loads(request_data or '{}')
+        try:
+            data = data_from_request(request)
+        except ValueError as error:
+            return 400, 'Incorrect parameters: {error}'.format(error=error)
         group_infos = self.storage.get_group(group_hash)
         if not group_infos:
             return 404, ''
@@ -62,7 +62,29 @@ class HttpService(object):
             results = apply_filters(url_infos, filters, excludes)
             if results:
                 infos[url_hash] = results
+        log('Returning {num} results'.format(num=len(infos)))
         return json.dumps(infos, indent=2)
+
+    @http('GET', '/')
+    def retrieve_urls(self, request):
+        log('Retrieving urls')
+        try:
+            data = data_from_request(request)
+        except ValueError as error:
+            return 400, 'Incorrect parameters: {error}'.format(error=error)
+        all_urls = self.storage.get_all_urls()
+        if not all_urls:
+            return 404, ''
+        infos = {}
+        filters, excludes = extract_filters(data)
+        for url_hash, url in all_urls:
+            url_infos = self.storage.get_url(url_hash)
+            results = apply_filters(url_infos, filters, excludes)
+            if results:
+                infos[url_hash] = results
+        log('Returning {num} results'.format(num=len(infos)))
+        return json.dumps(infos, indent=2)
+
 
     @http('POST', '/check/one')
     @required_parameters('url')
@@ -80,8 +102,10 @@ class HttpService(object):
         group = data.get('group')
         group_hash = generate_hash(group)
         frequency = data.get('frequency', None)
-        log(('Checking "{group}" ({hash}) with frequency "{frequency}"'
-             .format(group=group, hash=group_hash, frequency=frequency)))
+        log(('Checking {num} URLs in group "{group}" ({hash}) '
+             'with frequency "{frequency}"'.format(
+              num=len(urls), group=group, hash=group_hash,
+              frequency=frequency)))
         for url in urls:
             self.fetch(url, group, frequency)
         return json.dumps({'group-hash': group_hash}, indent=2)

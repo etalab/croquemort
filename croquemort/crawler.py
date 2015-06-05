@@ -25,15 +25,19 @@ class CrawlerService(object):
         url, group, frequency = url_group_frequency
         log(('Checking {url} for group {group} and frequency "{frequency}"'
              .format(url=url, group=group, frequency=frequency)))
+        if not url.startswith('http'):
+            logbook.error('Error with {url}: not a URL'.format(url=url))
+            return
         self.storage.store_url(url)
         if group:
             self.storage.store_group(url, group)
             if frequency:
                 self.storage.store_frequency(url, group, frequency)
         try:
-            response = session.head(url)
+            response = session.head(url, allow_redirects=True)
         except requests.exceptions.ConnectionError:
             response = FakeResponse(status_code=503, headers={})
         except Exception as e:
             logbook.error('Error with {url}: {e}'.format(url=url, e=e))
+            return
         self.storage.store_metadata(url, response)

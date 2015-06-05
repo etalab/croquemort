@@ -1,4 +1,15 @@
-from croquemort.tools import apply_filters, extract_filters, generate_hash
+from unittest.mock import MagicMock
+
+from croquemort.tools import (
+    apply_filters, data_from_request, extract_filters, generate_hash
+)
+
+
+def test_data_from_request():
+    assert data_from_request({'foo': 'bar'}) == {'foo': 'bar'}
+    request = MagicMock()
+    request.get_data = lambda: b'{"foo": "bar"}'
+    assert data_from_request(request) == {'foo': 'bar'}
 
 
 def test_generate_hash():

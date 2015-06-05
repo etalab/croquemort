@@ -24,6 +24,10 @@ class RedisStorage(DependencyProvider):
     def get_dependency(self, worker_ctx):
         return self
 
+    def get_all_urls(self):
+        for url_hash in self.database.lrange('urls', 0, -1):
+            yield url_hash, self.get_url(url_hash)
+
     def get_url(self, url_hash):
         return self.database.hgetall(str_to_bytes(url_hash))
 
@@ -33,6 +37,8 @@ class RedisStorage(DependencyProvider):
     def store_url(self, url):
         url_hash = generate_hash(url)
         self.database.hset(url_hash, 'url', str_to_bytes(url))
+        if url_hash not in self.database.lrange('urls', 0, -1):
+            self.database.rpush('urls', str_to_bytes(url_hash))
 
     def store_group(self, url, group):
         url_hash = generate_hash(url)

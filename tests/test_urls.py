@@ -12,6 +12,12 @@ def web_session(container_factory, web_config, web_session):
     return web_session
 
 
+def test_get_urls(web_session):
+    rv = web_session.get('/')
+    assert rv.text == '{}'
+    assert rv.status_code == 200
+
+
 def test_get_url(web_session):
     rv = web_session.get('/url', data=json.dumps({
         'url': 'http://example.org'

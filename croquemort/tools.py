@@ -7,6 +7,14 @@ import wrapt
 log = logbook.debug
 
 
+def data_from_request(request):
+    """Return a dict of data from a JSON request, idempotent."""
+    if isinstance(request, dict):
+        return request
+    raw = request.get_data().decode('utf-8')
+    return json.loads(raw or '{}')
+
+
 def required_parameters(*parameters):
     """A decorator for views with required parameters.
 
@@ -20,9 +28,8 @@ def required_parameters(*parameters):
     def wrapper(wrapped, instance, args, kwargs):
         args = list(args)
         request = args[0]
-        raw = request.get_data().decode('utf-8')
         try:
-            data = json.loads(raw or '{}')
+            data = data_from_request(request)
         except ValueError as error:
             return 400, 'Incorrect parameters: {error}'.format(error=error)
         for parameter in parameters:
