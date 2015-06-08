@@ -377,6 +377,17 @@ Creating croquemort_rabbitmq_1...
 $ python -m pytest
 ```
 
+In the case you use your own middleware with different configuration,
+you can pass this configuration as py.test command line arguments:
+```shell
+python -m pytest --redis-uri=redis://myredis:6379/0 --amqp-uri=amqp://john:doe@myrabbit
+```
+
+Read the py.test help to see all available options:
+```shell
+python -m pytest --help
+```
+
 
 ## Versioning
 
