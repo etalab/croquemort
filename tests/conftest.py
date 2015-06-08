@@ -43,6 +43,11 @@ def pytest_addoption(parser):
         default='http://guest:guest@localhost:15672',
         help=("The URI for rabbit's management API."))
 
+    parser.addoption(
+        "--redis-uri", action="store", dest='REDIS_URI',
+        default='redis://localhost:6379/0',
+        help=("The Redis URI to connect to."))
+
 
 def pytest_configure(config):
     if config.option.blocking_detection:
@@ -82,7 +87,14 @@ def rabbit_config(request, rabbit_manager):
 
 
 @pytest.yield_fixture
-def container_factory(rabbit_config):
+def container_config(request, rabbit_config):
+    config = rabbit_config
+    config['REDIS_URI'] = request.config.getoption('REDIS_URI')
+    yield config
+
+
+@pytest.yield_fixture
+def container_factory(container_config):
     all_containers = []
 
     def make_container(service_cls, config, worker_ctx_cls=None):
@@ -100,7 +112,7 @@ def container_factory(rabbit_config):
 
 
 @pytest.yield_fixture
-def rpc_proxy_factory(rabbit_config):
+def rpc_proxy_factory(container_config):
     """ Factory fixture for standalone RPC proxies.
 
     Proxies are started automatically so they can be used without a ``with``
@@ -110,7 +122,7 @@ def rpc_proxy_factory(rabbit_config):
     all_proxies = []
 
     def make_proxy(service_name, **kwargs):
-        proxy = ServiceRpcProxy(service_name, rabbit_config, **kwargs)
+        proxy = ServiceRpcProxy(service_name, container_config, **kwargs)
         all_proxies.append(proxy)
         return proxy.start()
 
@@ -128,14 +140,14 @@ def predictable_call_ids(request):
 
 
 @pytest.yield_fixture()
-def web_config(rabbit_config):
+def web_config(container_config):
     # find a port that's likely to be free
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(('127.0.0.1', 0))
     port = sock.getsockname()[1]
     sock.close()
 
-    cfg = rabbit_config
+    cfg = container_config
     cfg['WEB_SERVER_ADDRESS'] = str(port)
     yield cfg
 

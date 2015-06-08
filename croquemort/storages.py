@@ -7,6 +7,10 @@ from kombu.utils.encoding import str_to_bytes
 from .tools import generate_hash
 
 
+REDIS_URI_KEY = 'REDIS_URI'
+REDIS_DEFAULT_URI = 'redis://localhost:6379/0'
+
+
 class RedisStorage(DependencyProvider):
     headers = (
         'etag', 'expires', 'last-modified',
@@ -14,12 +18,13 @@ class RedisStorage(DependencyProvider):
         'content-md5', 'content-encoding', 'content-location'
     )
 
-    def __init__(self):
-        self.database = redis.StrictRedis(host='localhost',
-                                          port=6379,
-                                          db=0,
-                                          decode_responses=True,
-                                          charset='utf-8')
+    def setup(self):
+        super(RedisStorage, self).setup()
+        redis_uri = self.container.config.get(REDIS_URI_KEY, REDIS_DEFAULT_URI)
+
+        self.database = redis.StrictRedis.from_url(redis_uri,
+                                                   decode_responses=True,
+                                                   charset='utf-8')
 
     def get_dependency(self, worker_ctx):
         return self

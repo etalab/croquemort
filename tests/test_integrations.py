@@ -11,11 +11,11 @@ from croquemort.http import HttpService
 
 
 @pytest.yield_fixture
-def runner_factory(rabbit_config):
+def runner_factory(container_config):
     all_runners = []
 
     def make_runner(*service_classes):
-        runner = ServiceRunner(rabbit_config)
+        runner = ServiceRunner(container_config)
         for service_cls in service_classes:
             runner.add_service(service_cls)
         all_runners.append(runner)
