@@ -5,7 +5,8 @@ from nameko.standalone.rpc import ClusterRpcProxy
 from croquemort.tools import generate_hash
 
 config = {
-    'AMQP_URI': 'amqp://guest:guest@localhost'
+    'AMQP_URI': 'amqp://guest:guest@localhost',
+    'REDIS_URI': 'redis://localhost:6379/0',
 }
 
 parser = argparse.ArgumentParser()

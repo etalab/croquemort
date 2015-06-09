@@ -358,6 +358,37 @@ Hello fellow hacker, it’s good to have you on board! We plan to implement thes
 * reporting for a group of URLs
 
 
+### Testing
+
+Before submitting any pull-request, you must ensure tests are passing.
+You should add tests for any new feature and/or bugfix.
+You can run tests with the following command:
+```shell
+$ python -m pytest
+```
+
+You must have rabbitmq and redis running to pass the test.
+
+A ``docker-compose.yml`` file is provided to be quickly ready:
+```shell
+$ docker-compose up -d
+Creating croquemort_redis_1...
+Creating croquemort_rabbitmq_1...
+$ python -m pytest
+```
+
+In the case you use your own middleware with different configuration,
+you can pass this configuration as py.test command line arguments:
+```shell
+python -m pytest --redis-uri=redis://myredis:6379/0 --amqp-uri=amqp://john:doe@myrabbit
+```
+
+Read the py.test help to see all available options:
+```shell
+python -m pytest --help
+```
+
+
 ## Versioning
 
 Version numbering follows the [Semantic versioning](http://semver.org/) approach.
@@ -365,7 +396,7 @@ Version numbering follows the [Semantic versioning](http://semver.org/) approach
 
 ## License
 
-We’re using the [MIT license](https://tldrlegal.com/license/mit-license). 
+We’re using the [MIT license](https://tldrlegal.com/license/mit-license).
 
 
 ## Credits
