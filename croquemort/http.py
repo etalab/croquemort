@@ -85,7 +85,6 @@ class HttpService(object):
         log('Returning {num} results'.format(num=len(infos)))
         return json.dumps(infos, indent=2)
 
-
     @http('POST', '/check/one')
     @required_parameters('url')
     def check_one(self, data):
@@ -103,9 +102,9 @@ class HttpService(object):
         group_hash = generate_hash(group)
         frequency = data.get('frequency', None)
         log(('Checking {num} URLs in group "{group}" ({hash}) '
-             'with frequency "{frequency}"'.format(
-              num=len(urls), group=group, hash=group_hash,
-              frequency=frequency)))
+             'with frequency "{frequency}"'.format(num=len(urls), group=group,
+                                                   hash=group_hash,
+                                                   frequency=frequency)))
         for url in urls:
             self.fetch(url, group, frequency)
         return json.dumps({'group-hash': group_hash}, indent=2)
