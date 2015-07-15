@@ -38,7 +38,20 @@ def test_retrieve_urls(runner_factory, web_session):
     storage.get_all_urls = lambda: (('hash', 'url'),)
     runner.start()
     rv = web_session.get('/')
-    assert rv.json()['hash'] == {'url': 'hash'}
+    assert rv.json()['urls'] == 1
+
+
+def test_retrieve_urls_filtered(runner_factory, web_session):
+    runner = runner_factory(HttpService)
+    http_container = get_container(runner, HttpService)
+    storage = replace_dependencies(http_container, 'storage')
+    storage.get_url = lambda url_hash: {'url': url_hash, 'metadata': 'meta'}
+    storage.get_all_urls = lambda: (('hash', 'url'),)
+    runner.start()
+    rv = web_session.get('/', data=json.dumps({
+        'filter_metadata': 'meta'
+    }))
+    assert rv.json()['hash'] == {'url': 'hash', 'metadata': 'meta'}
 
 
 def test_retrieve_url(runner_factory, web_session):

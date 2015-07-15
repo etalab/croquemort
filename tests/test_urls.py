@@ -14,7 +14,7 @@ def web_session(container_factory, web_config, web_session):
 
 def test_get_urls(web_session):
     rv = web_session.get('/')
-    assert rv.text == '{}'
+    assert rv.json()['urls'] == 0
     assert rv.status_code == 200
 
 

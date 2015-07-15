@@ -77,6 +77,8 @@ class HttpService(object):
             return 404, ''
         infos = {}
         filters, excludes = extract_filters(data)
+        if not filters and not excludes:
+            return json.dumps({'urls': len(list(all_urls))}, indent=2)
         for url_hash, url in all_urls:
             url_infos = self.storage.get_url(url_hash)
             results = apply_filters(url_infos, filters, excludes)
