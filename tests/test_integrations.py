@@ -38,7 +38,8 @@ def test_retrieve_urls(runner_factory, web_session):
     storage.get_all_urls = lambda: (('hash', 'url'),)
     runner.start()
     rv = web_session.get('/')
-    assert rv.json()['urls'] == 1
+    assert rv.json()['count'] == 1
+    assert rv.json()['hashes'] == ['hash']
 
 
 def test_retrieve_urls_filtered(runner_factory, web_session):

@@ -78,7 +78,10 @@ class HttpService(object):
         infos = {}
         filters, excludes = extract_filters(data)
         if not filters and not excludes:
-            return json.dumps({'urls': len(list(all_urls))}, indent=2)
+            log('Only returning hashes given that no filters are applied')
+            infos['hashes'] = [url_hash for url_hash, url in all_urls]
+            infos['count'] = len(infos['hashes'])
+            return json.dumps(infos, indent=2)
         for url_hash, url in all_urls:
             url_infos = self.storage.get_url(url_hash)
             results = apply_filters(url_infos, filters, excludes)
