@@ -65,6 +65,23 @@ def test_retrieve_url(runner_factory, web_session):
         'url': 'http://example.org'
     }))
     assert rv.json()['url'] == 'dab521de'
+    assert 'group' not in rv.json()
+
+
+def test_retrieve_url_with_group(runner_factory, web_session):
+    runner = runner_factory(HttpService)
+    http_container = get_container(runner, HttpService)
+    storage = replace_dependencies(http_container, 'storage')
+    storage.get_url = lambda url_hash: {
+        'url': url_hash,
+        'group': 'datagouvfr'
+    }
+    runner.start()
+    rv = web_session.get('/url', data=json.dumps({
+        'url': 'http://example.org'
+    }))
+    assert rv.json()['url'] == 'dab521de'
+    assert rv.json()['group'] == 'datagouvfr'
 
 
 def test_retrieve_group(runner_factory, web_session):
@@ -83,7 +100,7 @@ def test_retrieve_group(runner_factory, web_session):
     }))
     result = rv.json()
     assert result['name'] == 'datagouvfr'
-    assert result['url_hash']['url'] == 'url_hash'
+    assert 'url_hash' in result['urls'][0].values()
 
 
 def test_retrieve_group_filtered(runner_factory, web_session):
@@ -111,8 +128,8 @@ def test_retrieve_group_filtered(runner_factory, web_session):
     }))
     result = rv.json()
     assert result['name'] == 'datagouvfr'
-    assert 'url_hash1' in result
-    assert 'url_hash2' not in result
+    assert 'url_hash1' in result['urls'][0].values()
+    assert 'url_hash2' not in result['urls'][0].values()
 
 
 def test_retrieve_group_excluded(runner_factory, web_session):
@@ -140,8 +157,8 @@ def test_retrieve_group_excluded(runner_factory, web_session):
     }))
     result = rv.json()
     assert result['name'] == 'datagouvfr'
-    assert 'url_hash1' not in result
-    assert 'url_hash2' in result
+    assert 'url_hash1' not in result['urls'][0].values()
+    assert 'url_hash2' in result['urls'][0].values()
 
 
 def test_retrieve_group_excluded_empty(runner_factory, web_session):
@@ -169,8 +186,8 @@ def test_retrieve_group_excluded_empty(runner_factory, web_session):
     }))
     result = rv.json()
     assert result['name'] == 'datagouvfr'
-    assert 'url_hash1' not in result
-    assert 'url_hash2' in result
+    assert 'url_hash1' not in result['urls'][0].values()
+    assert 'url_hash2' in result['urls'][0].values()
 
 
 def test_checking_one(runner_factory, web_session):

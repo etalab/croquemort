@@ -25,7 +25,10 @@ class HttpService(object):
     @required_parameters('url')
     def retrieve_url(self, data):
         url = data.get('url')
-        log('Retrieving url {url}'.format(url=url))
+        group = data.get('group', None)
+        log('Retrieving url {url} for group {group}'.format(
+            url=url, group=group))
+        self.fetch(url, group)  # Try again for later check.
         return self.retrieve_url_from_hash(data, generate_hash(url))
 
     @http('GET', '/url/<url_hash>')
@@ -57,12 +60,14 @@ class HttpService(object):
         group_infos.pop('url')
         infos = {'name': group_infos.pop('name')}
         filters, excludes = extract_filters(data)
+        urls_infos = []
         for url_hash, url in group_infos.items():
             url_infos = self.storage.get_url(url_hash)
             results = apply_filters(url_infos, filters, excludes)
             if results:
-                infos[url_hash] = results
-        log('Returning {num} results'.format(num=len(infos)))
+                urls_infos.append(results)
+        infos['urls'] = urls_infos
+        log('Returning {num} results'.format(num=len(infos['urls'])))
         return json.dumps(infos, indent=2)
 
     @http('GET', '/')
@@ -94,9 +99,11 @@ class HttpService(object):
     @required_parameters('url')
     def check_one(self, data):
         url = data.get('url')
+        group = data.get('group', None)
         url_hash = generate_hash(url)
-        log('Checking "{url}" ({hash})'.format(url=url, hash=url_hash))
-        self.fetch(url)
+        log('Checking "{url}" ({hash}) in group "{group}"'.format(
+            url=url, hash=url_hash, group=group))
+        self.fetch(url, group=group)
         return json.dumps({'url-hash': url_hash}, indent=2)
 
     @http('POST', '/check/many')

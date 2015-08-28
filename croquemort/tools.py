@@ -15,6 +15,16 @@ def data_from_request(request):
     return json.loads(raw or '{}')
 
 
+def flatten_get_parameters(request):
+    """Return a dict with flattened GET parameters.
+
+    Otherwise a dict(ImmutableMultiDict) returns a list for each
+    parameter value and that is not what we want in most of the cases.
+    """
+    return {k: len(v) == 1 and v[0] or v
+            for k, v in dict(request.args).items()}
+
+
 def required_parameters(*parameters):
     """A decorator for views with required parameters.
 
@@ -32,6 +42,7 @@ def required_parameters(*parameters):
             data = data_from_request(request)
         except ValueError as error:
             return 400, 'Incorrect parameters: {error}'.format(error=error)
+        data.update(flatten_get_parameters(request))
         for parameter in parameters:
             if parameter not in data:
                 log(('"{parameter}" parameter not found in {data}'

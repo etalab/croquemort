@@ -37,7 +37,7 @@ class RedisStorage(DependencyProvider):
         return self.database.hgetall(str_to_bytes(url_hash))
 
     def get_group(self, group_hash):
-        return self.database.hgetall(group_hash)
+        return self.database.hgetall(str_to_bytes(group_hash))
 
     def store_url(self, url):
         url_hash = generate_hash(url)
