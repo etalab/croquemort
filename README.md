@@ -28,9 +28,9 @@ We’re using these technologies: RabbitMQ and Redis. You have to install and la
 Once installed, run these commands to setup the project:
 
 ```shell
-$ python3.4 -m venv ~/.virtualenvs/croquemort
+$ python3.5 -m venv ~/.virtualenvs/croquemort
 $ source ~/.virtualenvs/croquemort/bin/activate
-$ pip3.4 install -r requirements.txt
+$ pip3.5 install -r requirements.txt
 ```
 
 You're good to go!

@@ -78,3 +78,12 @@ class RedisStorage(DependencyProvider):
             group_infos.pop('name')
             for url_hash, url in group_infos.iteritems():
                 yield url
+
+    def is_currently_checked(self, url, delay):  # In seconds.
+        check_url_hash = 'check-{hash}'.format(hash=generate_hash(url))
+        if self.database.exists(check_url_hash):
+            return True
+        else:
+            self.database.set(check_url_hash, url)
+            self.database.expire(check_url_hash, delay)
+            return False
