@@ -47,8 +47,8 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
-*.log
+# System stuff
+.DS_Store
 
 # Sphinx documentation
 docs/_build/
@@ -57,4 +57,4 @@ docs/_build/
 target/
 
 # Redis
-dump.rdb
+dump.rdb*
