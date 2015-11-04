@@ -64,9 +64,11 @@ def apply_filters(data, filters, excludes):
     excluded_domain = (
         has_domain_exclude
         and urlparse(data['url']).netloc == excludes.pop('domain'))
+    kept_domain = ((has_domain_filter and filtered_domain)
+                   or (has_domain_exclude and not excluded_domain))
     # Only filter the domain and quick return if no other filters.
     if has_domain and not (filters or excludes):
-        if filtered_domain:
+        if kept_domain:
             return data
         else:
             return
@@ -80,8 +82,7 @@ def apply_filters(data, filters, excludes):
     if filters and excludes:
         if has_props and has_not_props:
             if has_domain:
-                if ((has_domain_filter and filtered_domain)
-                        or (has_domain_exclude and not excluded_domain)):
+                if kept_domain:
                     return data
                 else:
                     return
@@ -92,8 +93,7 @@ def apply_filters(data, filters, excludes):
     elif filters:
         if has_props:
             if has_domain:
-                if ((has_domain_filter and filtered_domain)
-                        or (has_domain_exclude and not excluded_domain)):
+                if kept_domain:
                     return data
                 else:
                     return
@@ -104,8 +104,7 @@ def apply_filters(data, filters, excludes):
     elif excludes:
         if has_not_props:
             if has_domain:
-                if ((has_domain_filter and filtered_domain)
-                        or (has_domain_exclude and not excluded_domain)):
+                if kept_domain:
                     return data
                 else:
                     return

@@ -44,6 +44,9 @@ def test_apply_filters_with_domains():
     input = {'url': 'http://example.org/'}
     assert apply_filters(input, {'domain': 'example.org'}, {}) == input
     assert apply_filters(input, {}, {'domain': 'example.org'}) is None
+    input = {'url': 'http://example.org/'}
+    assert apply_filters(input, {'domain': 'example.com'}, {}) is None
+    assert apply_filters(input, {}, {'domain': 'example.com'}) == input
     input = {
         'url': 'http://example.com/',
         'status': '200',

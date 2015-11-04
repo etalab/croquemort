@@ -47,12 +47,6 @@ coverage.xml
 *.mo
 *.pot
 
-# System stuff
-.DS_Store
-
-# Sphinx documentation
-docs/_build/
-
 # PyBuilder
 target/
 
