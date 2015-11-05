@@ -11,17 +11,18 @@ from .tools import apply_filters
 template_path = os.path.join(os.path.dirname(__file__), 'templates')
 env = Environment(loader=FileSystemLoader(template_path), autoescape=True)
 
+# Flat UI colors from http://flatuicolors.co/
+COLORS = [
+    '#1ABC9C', '#16A085', '#2ECC71', '#27AE60', '#3498DB', '#2980B9',
+    '#9B59B6', '#8E44AD', '#34495E', '#2C3E50', '#F1C40F', '#F39C12',
+    '#E67E22', '#D35400', '#E74C3C', '#C0392B', '#ECF0F1', '#BDC3C7',
+    '#95A5A6', '#7F8C8D',
+]
+
 
 def compute_report(urls, filters, excludes, querystring, with_links=False):
     count = 0
-    # Flat UI colors from http://flatuicolors.co/
-    colors = [
-        '#1ABC9C', '#16A085', '#2ECC71', '#27AE60', '#3498DB', '#2980B9',
-        '#9B59B6', '#8E44AD', '#34495E', '#2C3E50', '#F1C40F', '#F39C12',
-        '#E67E22', '#D35400', '#E74C3C', '#C0392B', '#ECF0F1', '#BDC3C7',
-        '#95A5A6', '#7F8C8D',
-    ]
-    colors *= 4
+    colors = COLORS * 4  # Be sure to have enough colors.
     availability = 0
     statuses = defaultdict(int)
     content_types = defaultdict(int)

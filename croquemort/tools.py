@@ -66,51 +66,18 @@ def apply_filters(data, filters, excludes):
         and urlparse(data['url']).netloc == excludes.pop('domain'))
     kept_domain = ((has_domain_filter and filtered_domain)
                    or (has_domain_exclude and not excluded_domain))
-    # Only filter the domain and quick return if no other filters.
-    if has_domain and not (filters or excludes):
-        if kept_domain:
-            return data
-        else:
-            return
-
     has_props = all(data.get(prop) == value
                     for prop, value in filters.items())
     has_not_props = all(data.get(prop) != value
                         and data.get(prop) is not None
                         for prop, value in excludes.items()
                         if prop in data)
-    if filters and excludes:
-        if has_props and has_not_props:
-            if has_domain:
-                if kept_domain:
-                    return data
-                else:
-                    return
-            else:
-                return data
-        else:
-            return
-    elif filters:
-        if has_props:
-            if has_domain:
-                if kept_domain:
-                    return data
-                else:
-                    return
-            else:
-                return data
-        else:
-            return
-    elif excludes:
-        if has_not_props:
-            if has_domain:
-                if kept_domain:
-                    return data
-                else:
-                    return
-            else:
-                return data
-        else:
-            return
-    else:
-        return data
+    if has_domain and not kept_domain:
+        return
+    elif filters and excludes and not has_props or not has_not_props:
+        return
+    elif filters and not has_props:
+        return
+    elif excludes and not has_not_props:
+        return
+    return data
