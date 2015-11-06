@@ -1,4 +1,4 @@
-# CroqueMort
+# Croquemort
 
 ## Vision
 
@@ -318,7 +318,33 @@ $ PYTHONPATH=. python example_csv.py --csvfile path/to/your/file.csv --group gro
 Group hash: 2752262332
 ```
 
-There are three possibilities: "hourly", "daily" and "monthly". If you don't specify any you'll have to refresh URL checks manually. The `timer` service will check groups with associated frequencies and refresh associated URLs accordingly
+There are three possibilities: "hourly", "daily" and "monthly". If you don't specify any you'll have to refresh URL checks manually. The `timer` service will check groups with associated frequencies and refresh associated URLs accordingly.
+
+
+### Migrations
+
+You may want to migrate some data over time with the `migrations` service:
+
+```shell
+$ nameko run croquemort.migrations
+starting services: migrations
+Connected to amqp://guest:**@127.0.0.1:5672//
+```
+
+You can now run a nameko shell:
+
+```shell
+$ nameko shell
+>>> n.rpc.migrations.split_content_types()
+>>> n.rpc.migrations.delete_urls_for('www.data.gouv.fr')
+>>> n.rpc.migrations.delete_urls_for('static.data.gouv.fr')
+```
+
+The `split_content_types` migration is useful if you use Croquemort prior to the integration of the report: we use to store the whole string without splitting on the `charset` leading to fragmentation of the Content-types report graph.
+
+The `delete_urls_for` is useful if you want to delete all URLs related to a given `domain` you must pass as a paramater: we accidently checked URLs that are under our control so we decided to clean up in order to reduce the size of the Redis database and increase the relevance of reports.
+
+You are encouraged to add your own generic migrations to the service and share those with the community via pull-requests (see below).
 
 
 ## Contributing

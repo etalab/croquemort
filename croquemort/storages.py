@@ -39,6 +39,13 @@ class RedisStorage(DependencyProvider):
     def get_group(self, group_hash):
         return self.database.hgetall(str_to_bytes(group_hash))
 
+    def delete_url(self, url_hash, data=None):
+        if data is None:
+            data = self.get_url(url_hash)
+        for key in data:
+            self.database.hdel(url_hash, key)
+        self.database.lrem('urls', 0, url_hash)
+
     def store_url(self, url):
         url_hash = generate_hash(url)
         self.database.hset(url_hash, 'url', str_to_bytes(url))
@@ -72,16 +79,25 @@ class RedisStorage(DependencyProvider):
 
                 # Special treatment for content type which may contain charset.
                 if header == 'content-type' and ';' in value:
-                    content_type, charset = value.split(';')
-                    value = content_type.strip().lower()
-                    if '=' in charset:
-                        _, charset = charset.split('=')
-                        self.database.hset(
-                            url_hash,
-                            'charset',
-                            str_to_bytes(charset.strip().lower()))
+                    self.store_content_type(url_hash, value)
+                else:
+                    self.database.hset(url_hash, header, str_to_bytes(value))
 
-                self.database.hset(url_hash, header, str_to_bytes(value))
+    def store_content_type(self, url_hash, value):
+        try:
+            content_type, charset = value.split(';')
+        except ValueError:
+            # Weird e.g.: text/html;h5ai=0.20;charset=UTF-8
+            content_type, _, charset = value.split(';')
+
+        value = content_type.strip().lower()
+        if '=' in charset:
+            _, charset = charset.split('=')
+            self.database.hset(
+                url_hash,
+                'charset',
+                str_to_bytes(charset.strip().lower()))
+        self.database.hset(url_hash, 'content-type', str_to_bytes(value))
 
     def get_frequency_urls(self, frequency='hourly'):
         for group_hash in self.database.lrange(frequency, 0, -1):
