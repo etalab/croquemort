@@ -1,6 +1,6 @@
 Jinja2==2.8
 Logbook==0.9.1
-nameko==2.1.2
+nameko==2.2.0
 pytest==2.8.2
 redis==2.10.3
 wrapt==1.10.4
