@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Links checker report</title>
+  <link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
+  <style type="text/css">
+    body {
+      font-family: 'Oswald', sans-serif;
+      text-align: center;
+      color: #2C3E50;
+      background:  #ECF0F1;
+    }
+    h1 {
+      font-size: 3em;
+      color: #D35400;
+    }
+    canvas, table {
+      width: 100%;
+    }
+    a, a:visited {
+      color: #2980B9;
+    }
+    .wrapper {
+      width: 80%;
+      margin: 0 auto;
+    }
+    .flexed {
+      display: flex;
+    }
+    .item {
+      flex: 1;
+    }
+    .domains {
+      flex: 2;
+    }
+    .sidecharts {
+      display: flex;
+      flex-direction: column;
+    }
+    .customTooltip {
+      opacity: 0;
+      position: absolute;
+      background: rgba(0, 0, 0, .7);
+      color: white;
+      padding: 3px;
+      border-radius: 3px;
+      -webkit-transition: opacity .3s ease;
+              transition: opacity .3s ease;
+      -webkit-transform: translate(-50%, 0);
+              transform: translate(-50%, 0);
+    }
+    .customTooltip a {
+      color: white;
+    }
+    .awesome {
+      color: #2ECC71;
+    }
+    .good {
+      color: #34495E;
+    }
+    .bad {
+      color: #E67E22;
+    }
+    .sucks {
+      color: #C0392B;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>{{ count }} URLs checked, {{ availability }}% of availability.</h1>
+  {% if filtered %}<h3><a href="/">Reset filters</a></h3>{% endif %}
+</header>
+<main class="wrapper">
+<section class="flexed">
+  <div class="item">
+    <h2>Statuses</h2>
+    <canvas id="statusChart"></canvas>
+    <div id="statusTooltip" class="customTooltip"></div>
+  </div>
+  <div class="item">
+    <h2>Content types</h2>
+    <canvas id="contentTypeChart"></canvas>
+    <div id="contentTypeTooltip" class="customTooltip"></div>
+  </div>
+</section>
+<section class="flexed">
+  <div class="domains">
+    <table>
+     <thead>
+      <tr>
+       <th>Domain names
+       <th>URLs checked
+       <th>Availability
+     <tbody>
+      {% for (domain, stats) in domains %}
+        {% set domain_availability = stats.valid and round(stats.valid / stats.count * 100, 1) or 0 %}
+        {% if domain_availability >= 95 %}
+          {% set class_name = 'awesome' %}
+        {% elif 80 <= domain_availability < 95 %}
+          {% set class_name = 'good' %}
+        {% elif 50 <= domain_availability < 80 %}
+          {% set class_name = 'bad' %}
+        {% else %}
+          {% set class_name = 'sucks' %}
+        {% endif %}
+        <tr>
+          <td>{{ domain }} (<a href="/?filter_domain={{ domain }}">only</a>, <a href="/?exclude_domain={{ domain }}">exclude</a>{% if filtered and not links %}, <a href="/?{{ querystring }}{% if domain not in querystring %}&filter_domain={{ domain }}{% endif %}&display_links">links</a>{% endif %})
+          <td>{{ stats.count }}
+          <td class="{{ class_name }}">{{ domain_availability }}%
+      {% endfor %}
+    </table>
+    {% if links %}
+      <h2>Related links</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>URL
+            <th>Availability
+        <tbody>
+          {% for link in links %}
+            <tr>
+              <td><a href="{{ link }}">{{ link }}</a>
+              <td>
+                <button class="check-manually" data-url="{{ link }}">Check</button>
+          {% endfor %}
+      </table>
+    {% endif %}
+  </div>
+  <div class="item sidecharts">
+    <div class="item">
+      <h2>URL schemes</h2>
+      <canvas id="schemeChart"></canvas>
+    </div>
+    <div class="item">
+      <h2>Last updates</h2>
+      <canvas id="updateChart"></canvas>
+    </div>
+  </div>
+</section>
+</main>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js"></script>
+<script type="text/javascript">
+  // Clickable tooltips are horrible and inspired by http://stackoverflow.com/a/30504672
+  var statusData = [
+    {% for kind, count in statuses %}
+      {
+        value: {{ count }},
+        label: "{{ kind }}",
+        color: "{{ colors[loop.index0] }}"
+      },
+    {% endfor %}
+  ];
+  var ctx = document.getElementById("statusChart").getContext("2d");
+  new Chart(ctx).Pie(statusData, {
+    customTooltips: function (tooltip) {
+      if (!tooltip) { return; }
+      var tooltipEl = document.getElementById('statusTooltip');
+      var name = tooltip.text.split(': ')[0];
+      tooltipEl.innerHTML = tooltip.text + ' (<a href="/?{% if querystring and "status" not in querystring %}{{ querystring }}&{% endif %}filter_status=' + name + '">filter</a>, <a href="/?{% if querystring and "status" not in querystring %}{{ querystring }}&{% endif %}exclude_status=' + name + '">exclude</a>)';
+      tooltipEl.style.opacity = 1;
+      tooltipEl.style.left = tooltip.chart.canvas.offsetLeft + tooltip.x + 'px';
+      tooltipEl.style.top = tooltip.chart.canvas.offsetTop + tooltip.y + 'px';
+    }
+  });
+
+  var contentTypeData = [
+    {% for kind, count in content_types %}
+      {
+        value: {{ count }},
+        label: "{{ kind }}",
+        color: "{{ colors[loop.index0] }}"
+      },
+    {% endfor %}
+  ];
+  var ctx = document.getElementById("contentTypeChart").getContext("2d");
+  new Chart(ctx).Pie(contentTypeData, {
+    customTooltips: function (tooltip) {
+      if (!tooltip) { return; }
+      var tooltipEl = document.getElementById('contentTypeTooltip');
+      var name = tooltip.text.split(': ')[0];
+      tooltipEl.innerHTML = tooltip.text + ' (<a href="/?{% if querystring and "content-type" not in querystring %}{{ querystring }}&{% endif %}filter_content-type=' + name + '">filter</a>, <a href="/?{% if querystring and "content-type" not in querystring %}{{ querystring }}&{% endif %}exclude_content-type=' + name + '">exclude</a>)';
+      tooltipEl.style.opacity = 1;
+      tooltipEl.style.left = tooltip.chart.canvas.offsetLeft + tooltip.x + 'px';
+      tooltipEl.style.top = tooltip.chart.canvas.offsetTop + tooltip.y + 'px';
+    }
+  });
+
+  var schemeData = [
+    {% for kind, count in schemes %}
+      {
+        value: {{ count }},
+        label: "{{ kind }}",
+        color: "{{ colors[loop.index0] }}"
+      },
+    {% endfor %}
+  ];
+  var ctx = document.getElementById("schemeChart").getContext("2d");
+  new Chart(ctx).Pie(schemeData);
+
+  var updateData = [
+    {% for kind, count in updates %}
+      {
+        value: {{ count }},
+        label: "{{ kind }}",
+        color: "{{ colors[loop.index0] }}"
+      },
+    {% endfor %}
+  ];
+  var ctx = document.getElementById("updateChart").getContext("2d");
+  new Chart(ctx).Pie(updateData);
+</script>
+<script type="text/javascript">
+  'use strict'
+  window.$ = document.querySelectorAll.bind(document)
+
+  void function (elements) {
+    // We have to do that manually.
+    function checkStatus(response) {
+      if (response.status >= 200 && response.status < 300) {
+        return response
+      } else {
+        var error = new Error(response.statusText)
+        error.response = response
+        throw error
+      }
+    }
+
+    ;[].forEach.call(elements, function(button) {
+      button.addEventListener('click', (event) => {
+        event.preventDefault()
+        fetch('/check/one', {
+          method: 'post',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            url: button.dataset.url,
+          })
+        })
+        .then(checkStatus)
+        .then((response) => {
+          button.innerHTML = 'Checked!'
+        })
+        .catch((error) => {
+          console.log('request failed', error)
+        })
+      })
+    })
+  }($('.check-manually'))
+</script>
+</body>
+</html>

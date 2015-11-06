@@ -14,7 +14,7 @@ def web_session(container_factory, web_config, web_session):
 
 def test_get_urls(web_session):
     rv = web_session.get('/')
-    assert rv.json()['count'] == 0
+    assert rv.text.startswith('<!doctype html>')
     assert rv.status_code == 200
 
 

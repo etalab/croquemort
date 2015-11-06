@@ -30,31 +30,6 @@ def runner_factory(container_config):
             pass
 
 
-def test_retrieve_urls(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
-    storage = replace_dependencies(http_container, 'storage')
-    storage.get_url = lambda url_hash: {'url': url_hash}
-    storage.get_all_urls = lambda: (('hash', 'url'),)
-    runner.start()
-    rv = web_session.get('/')
-    assert rv.json()['count'] == 1
-    assert rv.json()['hashes'] == ['hash']
-
-
-def test_retrieve_urls_filtered(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
-    storage = replace_dependencies(http_container, 'storage')
-    storage.get_url = lambda url_hash: {'url': url_hash, 'metadata': 'meta'}
-    storage.get_all_urls = lambda: (('hash', 'url'),)
-    runner.start()
-    rv = web_session.get('/', data=json.dumps({
-        'filter_metadata': 'meta'
-    }))
-    assert rv.json()['hash'] == {'url': 'hash', 'metadata': 'meta'}
-
-
 def test_retrieve_url(runner_factory, web_session):
     runner = runner_factory(HttpService)
     http_container = get_container(runner, HttpService)
@@ -62,9 +37,9 @@ def test_retrieve_url(runner_factory, web_session):
     storage.get_url = lambda url_hash: {'url': url_hash}
     runner.start()
     rv = web_session.get('/url', data=json.dumps({
-        'url': 'http://example.org'
+        'url': 'http://example.org/test_retrieve_url'
     }))
-    assert rv.json()['url'] == 'dab521de'
+    assert rv.json()['url'] == '9c01c218'
     assert 'group' not in rv.json()
 
 
@@ -78,9 +53,9 @@ def test_retrieve_url_with_group(runner_factory, web_session):
     }
     runner.start()
     rv = web_session.get('/url', data=json.dumps({
-        'url': 'http://example.org'
+        'url': 'http://example.org/test_retrieve_url_with_group'
     }))
-    assert rv.json()['url'] == 'dab521de'
+    assert rv.json()['url'] == '462bd375'
     assert rv.json()['group'] == 'datagouvfr'
 
 
@@ -196,9 +171,9 @@ def test_checking_one(runner_factory, web_session):
     dispatch = replace_dependencies(http_container, 'dispatch')
     runner.start()
     rv = web_session.post('/check/one', data=json.dumps({
-        'url': 'http://example.org'
+        'url': 'http://example.org/test_checking_one'
     }))
-    assert rv.json()['url-hash'] == 'dab521de'
+    assert rv.json()['url-hash'] == 'a55f9fb5'
     assert dispatch.call_count == 1
 
 
@@ -208,7 +183,10 @@ def test_checking_many(runner_factory, web_session):
     dispatch = replace_dependencies(http_container, 'dispatch')
     runner.start()
     rv = web_session.post('/check/many', data=json.dumps({
-        'urls': ['http://example.org', 'http://example.com'],
+        'urls': [
+            'http://example.org/test_checking_many',
+            'http://example.com/test_checking_many'
+        ],
         'group': 'datagouvfr'
     }))
     assert rv.json()['group-hash'] == 'efcf3897'
@@ -221,7 +199,7 @@ def test_fetching(runner_factory, rpc_proxy_factory):
     http_container = get_container(runner, HttpService)
     dispatch = replace_dependencies(http_container, 'dispatch')
     runner.start()
-    http_server.fetch('http://example.org')
+    http_server.fetch('http://example.org/test_fetching')
     assert dispatch.call_count == 1
 
 
@@ -234,7 +212,7 @@ def test_crawling_url(runner_factory, rpc_proxy_factory):
     dispatch = event_dispatcher(config)
     with entrypoint_waiter(crawler_container, 'check_url'):
         dispatch('http_server', 'url_to_check',
-                 ['http://example.org', None, None])
+                 ['http://example.org/test_crawling_url', None, None])
     assert storage.store_url.call_count == 1
     assert storage.store_group.call_count == 0
     assert storage.store_metadata.call_count == 1
@@ -249,7 +227,8 @@ def test_crawling_group(runner_factory, rpc_proxy_factory):
     dispatch = event_dispatcher(config)
     with entrypoint_waiter(crawler_container, 'check_url'):
         dispatch('http_server', 'url_to_check',
-                 ['http://example.org', 'datagouvfr', None])
+                 ['http://example.org/test_crawling_group',
+                  'datagouvfr', None])
     assert storage.store_url.call_count == 1
     assert storage.store_group.call_count == 1
     assert storage.store_metadata.call_count == 1

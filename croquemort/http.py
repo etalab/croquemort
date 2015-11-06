@@ -1,16 +1,16 @@
 import json
+from urllib.parse import urlencode
 
 import logbook
 from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
 
+from .decorators import cache_page, required_parameters
 from .logger import LoggingDependency
+from .reports import compute_report
 from .storages import RedisStorage
-from .tools import (
-    apply_filters, data_from_request, extract_filters, generate_hash,
-    required_parameters
-)
+from .tools import apply_filters, extract_filters, generate_hash
 
 log = logbook.debug
 
@@ -48,12 +48,9 @@ class HttpService(object):
         return self.retrieve_group_from_hash(data, generate_hash(group))
 
     @http('GET', '/group/<group_hash>')
-    def retrieve_group_from_hash(self, request, group_hash):
+    @required_parameters()
+    def retrieve_group_from_hash(self, data, group_hash):
         log('Retrieving group hash {hash}'.format(hash=group_hash))
-        try:
-            data = data_from_request(request)
-        except ValueError as error:
-            return 400, 'Incorrect parameters: {error}'.format(error=error)
         group_infos = self.storage.get_group(group_hash)
         if not group_infos:
             return 404, ''
@@ -71,29 +68,18 @@ class HttpService(object):
         return json.dumps(infos, indent=2)
 
     @http('GET', '/')
-    def retrieve_urls(self, request):
-        log('Retrieving urls')
-        try:
-            data = data_from_request(request)
-        except ValueError as error:
-            return 400, 'Incorrect parameters: {error}'.format(error=error)
+    @required_parameters()
+    @cache_page(360)  # Seconds = 5 minutes.
+    def display_report(self, data):
+        log('Display report')
         all_urls = self.storage.get_all_urls()
         if not all_urls:
             return 404, ''
-        infos = {}
+        querystring = urlencode(data)
+        with_links = 'display_links' in data
         filters, excludes = extract_filters(data)
-        if not filters and not excludes:
-            log('Only returning hashes given that no filters are applied')
-            infos['hashes'] = [url_hash for url_hash, url in all_urls]
-            infos['count'] = len(infos['hashes'])
-            return json.dumps(infos, indent=2)
-        for url_hash, url in all_urls:
-            url_infos = self.storage.get_url(url_hash)
-            results = apply_filters(url_infos, filters, excludes)
-            if results:
-                infos[url_hash] = results
-        log('Returning {num} results'.format(num=len(infos)))
-        return json.dumps(infos, indent=2)
+        return compute_report(
+            all_urls, filters, excludes, querystring, with_links)
 
     @http('POST', '/check/one')
     @required_parameters('url')
@@ -124,9 +110,9 @@ class HttpService(object):
     @rpc
     def fetch(self, url, group=None, frequency=None):
         log('Checking {url} for group "{group}"'.format(url=url, group=group))
-        # Add a 10 seconds delay before checking again,
-        # avoid simulataneous checks leading to timeouts.
-        if not self.storage.is_currently_checked(url, delay=10):
+        # Add a 60 seconds delay before checking again,
+        # avoid simultaneous checks leading to timeouts.
+        if not self.storage.is_currently_checked(url, delay=60):
             self.dispatch('url_to_check', (url, group, frequency))
         else:
             log('Check of {url} already in progress'.format(url=url))

@@ -8,15 +8,15 @@ from .tools import generate_hash
 
 
 REDIS_URI_KEY = 'REDIS_URI'
-REDIS_DEFAULT_URI = 'redis://localhost:6379/0'
+REDIS_DEFAULT_URI = 'redis://localhost:6379/5'
+HEADERS = (
+    'etag', 'expires', 'last-modified', 'content-type', 'content-length',
+    'content-disposition', 'content-md5', 'content-encoding',
+    'content-location'
+)
 
 
 class RedisStorage(DependencyProvider):
-    headers = (
-        'etag', 'expires', 'last-modified',
-        'content-type', 'content-length', 'content-disposition',
-        'content-md5', 'content-encoding', 'content-location'
-    )
 
     def setup(self):
         super(RedisStorage, self).setup()
@@ -67,10 +67,21 @@ class RedisStorage(DependencyProvider):
         self.database.hset(url_hash, 'updated',
                            str_to_bytes(datetime.now().isoformat()))
         if response.headers:
-            for header in self.headers:
-                self.database.hset(
-                    url_hash, header,
-                    str_to_bytes(response.headers.get(header, '')))
+            for header in HEADERS:
+                value = response.headers.get(header, '')
+
+                # Special treatment for content type which may contain charset.
+                if header == 'content-type' and ';' in value:
+                    content_type, charset = value.split(';')
+                    value = content_type.strip().lower()
+                    if '=' in charset:
+                        _, charset = charset.split('=')
+                        self.database.hset(
+                            url_hash,
+                            'charset',
+                            str_to_bytes(charset.strip().lower()))
+
+                self.database.hset(url_hash, header, str_to_bytes(value))
 
     def get_frequency_urls(self, frequency='hourly'):
         for group_hash in self.database.lrange(frequency, 0, -1):
@@ -87,3 +98,11 @@ class RedisStorage(DependencyProvider):
             self.database.set(check_url_hash, url)
             self.database.expire(check_url_hash, delay)
             return False
+
+    def get_cache(self, key):
+        return self.database.hgetall(str_to_bytes(key))
+
+    def set_cache(self, key, content):
+        self.database.hset(key, 'timestamp',
+                           str_to_bytes(datetime.now().isoformat()))
+        self.database.hset(key, 'content', str_to_bytes(content))
