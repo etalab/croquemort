@@ -50,20 +50,14 @@ def cache_page(duration):
     def wrapper(wrapped, instance, args, kwargs):
         args = list(args)
         data = args[0]
-        storage = RedisStorage()
-        # TODO: should depends on the configuration.
-        redis_uri = 'redis://localhost:6379/5'
-        storage.database = redis.StrictRedis.from_url(redis_uri,
-                                                      decode_responses=True,
-                                                      charset='utf-8')
         key = 'cache-{data}'.format(data=urlencode(data))
-        cached = storage.get_cache(key)
+        cached = instance.storage.get_cache(key)
         if cached:
             timestamp = datetime.strptime(cached['timestamp'],
                                           '%Y-%m-%dT%H:%M:%S.%f')
             if timestamp + timedelta(seconds=duration) > datetime.now():
                 return Response(cached['content'], mimetype='text/html')
         response = wrapped(*args, **kwargs)
-        storage.set_cache(key, response.response[0])
+        instance.storage.set_cache(key, response.response[0])
         return response
     return wrapper
