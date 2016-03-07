@@ -61,6 +61,11 @@ $ nameko run --config config_crawler.yaml croquemort.crawler
 ```
 
 
+### Browsing your data
+
+At any time, you can open `http://localhost:8000/` and check the availability of your URLs collections within a nice dashboard that allows you to filter by statuses, content types, URL schemes, last updates and/or domains. There is even a CSV export of the data you are currently viewing if you want to script something.
+
+
 ### Fetching one URL
 
 Now you can use your favorite HTTP client (mine is [httpie](https://github.com/jakubroztocil/httpie)) to issue a POST request againt `localhost:8000/check/one` with the URL as a parameter:

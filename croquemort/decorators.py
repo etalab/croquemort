@@ -2,11 +2,9 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 import logbook
-import redis
 import wrapt
 from werkzeug.wrappers import Response
 
-from .storages import RedisStorage
 from .tools import data_from_request, flatten_get_parameters
 
 log = logbook.debug
@@ -50,7 +48,8 @@ def cache_page(duration):
     def wrapper(wrapped, instance, args, kwargs):
         args = list(args)
         data = args[0]
-        key = 'cache-{data}'.format(data=urlencode(data))
+        key = 'cache-{name}-{data}'.format(name=wrapped.__name__,
+                                           data=urlencode(data))
         cached = instance.storage.get_cache(key)
         if cached:
             timestamp = datetime.strptime(cached['timestamp'],
