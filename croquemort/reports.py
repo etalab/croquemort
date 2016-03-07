@@ -1,10 +1,13 @@
+import csv
 import os
 from collections import defaultdict
 from datetime import datetime, timedelta
+from io import StringIO
 from urllib.parse import urlparse
 
-from werkzeug.wrappers import Response
 from jinja2 import Environment, FileSystemLoader
+from werkzeug.datastructures import Headers
+from werkzeug.wrappers import Response
 
 from .tools import apply_filters
 
@@ -39,7 +42,7 @@ def compute_report(urls, filters, excludes, querystring, with_links=False):
             continue
 
         # Statuses.
-        status = data.get('status', '')  # TODO: check why no status?
+        status = data.get('status', '')
         if not status:
             continue
 
@@ -94,3 +97,47 @@ def compute_report(urls, filters, excludes, querystring, with_links=False):
     }
     template = env.get_template('report.html')
     return Response(template.render(context), mimetype='text/html')
+
+
+def compute_csv(urls, filters, excludes):
+    """Generate a streamed CSV of all data, optionally filtered."""
+
+    def generate():
+        """A generator is required to stream the actual CSV."""
+        fake_file = StringIO()
+        w = csv.writer(fake_file)
+
+        # Write the header.
+        w.writerow(('URL', 'Status', 'Content-Type', 'Updated'))
+        yield fake_file.getvalue()
+        fake_file.seek(0)
+        fake_file.truncate(0)
+
+        for url_hash, data in urls:
+            # Filtering.
+            data = apply_filters(data, filters, excludes)
+            if not data:
+                continue
+
+            # Statuses.
+            status = data.get('status', '')
+            if not status:
+                continue
+
+            url = data['url']
+            content_type = data.get('content-type', '')
+            updated = data.get('updated', '')
+
+            w.writerow((url, status, content_type, updated))
+            yield fake_file.getvalue()
+            fake_file.seek(0)
+            fake_file.truncate(0)
+
+    # Set headers with the appropriated filename.
+    headers = Headers()
+    headers.set('Content-Disposition', 'attachment',
+                filename='croquemort-{date_iso}.csv'.format(
+                    date_iso=datetime.now().date().isoformat()))
+
+    # Stream the response as the data is generated.
+    return Response(generate(), mimetype='text/csv', headers=headers)

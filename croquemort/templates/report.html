@@ -70,7 +70,10 @@
 <body>
 <header>
   <h1>{{ count }} URLs checked, {{ availability }}% of availability.</h1>
-  {% if filtered %}<h3><a href="/">Reset filters</a></h3>{% endif %}
+  <h3>
+    <a href="/csv?{{ querystring }}">Download as a CSV</a>
+    {% if filtered %} — <a href="/">Reset filters</a>{% endif %}
+  </h3>
 </header>
 <main class="wrapper">
 <section class="flexed">
