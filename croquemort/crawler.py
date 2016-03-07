@@ -1,3 +1,5 @@
+import re
+
 import collections
 import logbook
 import requests
@@ -6,6 +8,12 @@ from nameko.events import event_handler
 
 from .logger import LoggingDependency
 from .storages import RedisStorage
+
+# See https://github.com/kvesteri/validators for reference.
+url_pattern = re.compile(
+    r'^[a-z]+://([^/:]+\.[a-z]{2,10}|([0-9]{{1,3}}\.)'
+    r'{{3}}[0-9]{{1,3}})(:[0-9]+)?(\/.*)?$'
+)
 
 log = logbook.debug
 FakeResponse = collections.namedtuple('Response', ['status_code', 'headers'])
@@ -25,7 +33,7 @@ class CrawlerService(object):
         url, group, frequency = url_group_frequency
         log(('Checking {url} for group {group} and frequency "{frequency}"'
              .format(url=url, group=group, frequency=frequency)))
-        if not url.startswith('http'):
+        if not url_pattern.match(url):
             logbook.error('Error with {url}: not a URL'.format(url=url))
             return
         self.storage.store_url(url)
