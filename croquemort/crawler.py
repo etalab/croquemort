@@ -43,7 +43,8 @@ class CrawlerService(object):
                 self.storage.store_frequency(url, group, frequency)
         try:
             response = session.head(url, allow_redirects=True)
-            if response.status_code == 404:
+            # Double check for servers not dealing properly with HEAD.
+            if response.status_code in (404, 405):
                 log('Checking {url} with a GET'.format(url=url))
                 response = session.get(url, allow_redirects=True)
         except requests.exceptions.ConnectionError:
