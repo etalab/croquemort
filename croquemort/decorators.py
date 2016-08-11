@@ -58,5 +58,6 @@ def cache_page(duration):
                 return Response(cached['content'], mimetype='text/html')
         response = wrapped(*args, **kwargs)
         instance.storage.set_cache(key, response.response[0])
+        instance.storage.expire_cache(key, duration)
         return response
     return wrapper

@@ -122,3 +122,6 @@ class RedisStorage(DependencyProvider):
         self.database.hset(key, 'timestamp',
                            str_to_bytes(datetime.now().isoformat()))
         self.database.hset(key, 'content', str_to_bytes(content))
+
+    def expire_cache(self, key, duration):
+        self.database.expire(key, duration)
