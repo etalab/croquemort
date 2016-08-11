@@ -18,6 +18,12 @@ def test_get_urls(web_session):
     assert rv.status_code == 200
 
 
+def test_robots(web_session):
+    rv = web_session.get('/robots.txt')
+    assert rv.text == 'User-agent: *\nDisallow: /'
+    assert rv.status_code == 200
+
+
 def test_get_url(web_session):
     rv = web_session.get('/url', data=json.dumps({
         'url': 'http://example.org'

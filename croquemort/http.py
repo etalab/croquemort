@@ -81,6 +81,12 @@ class HttpService(object):
         return compute_report(
             all_urls, filters, excludes, querystring, with_links)
 
+    @http('GET', '/robots.txt')
+    def robots_txt(self, data):
+        log('Disallow indexing from all robots')
+        content = ['User-agent: *', 'Disallow: /']
+        return '\n'.join(content)
+
     # No cache here given the response is streamed.
     @http('GET', '/csv')
     @required_parameters()

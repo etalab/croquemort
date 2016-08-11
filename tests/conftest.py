@@ -22,28 +22,6 @@ from nameko.web.server import parse_address
 
 def pytest_addoption(parser):
     parser.addoption(
-        '--blocking-detection',
-        action='store_true',
-        dest='blocking_detection',
-        default=False,
-        help='turn on eventlet hub blocking detection')
-
-    parser.addoption(
-        "--log-level", action="store",
-        default='DEBUG',
-        help=("The logging-level for the test run."))
-
-    parser.addoption(
-        "--amqp-uri", action="store", dest='AMQP_URI',
-        default='amqp://guest:guest@localhost:5672/nameko_test',
-        help=("The AMQP-URI to connect to rabbit with."))
-
-    parser.addoption(
-        "--rabbit-ctl-uri", action="store", dest='RABBIT_CTL_URI',
-        default='http://guest:guest@localhost:15672',
-        help=("The URI for rabbit's management API."))
-
-    parser.addoption(
         "--redis-uri", action="store", dest='REDIS_URI',
         default='redis://localhost:6379/0',
         help=("The Redis URI to connect to."))
