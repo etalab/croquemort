@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <title>Links checker report</title>
-  <link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
+  <meta name="robots" content="noindex, nofollow">
+  <link href="https://fonts.googleapis.com/css?family=Oswald" rel="stylesheet" type="text/css">
   <style type="text/css">
     body {
       font-family: 'Oswald', sans-serif;
@@ -216,11 +217,9 @@
 </script>
 <script type="text/javascript">
   'use strict'
-  window.$ = document.querySelectorAll.bind(document)
-
   void function (elements) {
     // We have to do that manually.
-    function checkStatus(response) {
+    function checkStatus (response) {
       if (response.status >= 200 && response.status < 300) {
         return response
       } else {
@@ -230,7 +229,7 @@
       }
     }
 
-    ;[].forEach.call(elements, function(button) {
+    ;[].forEach.call(elements, function (button) {
       button.addEventListener('click', (event) => {
         event.preventDefault()
         fetch('/check/one', {
@@ -240,7 +239,7 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            url: button.dataset.url,
+            url: button.dataset.url
           })
         })
         .then(checkStatus)
@@ -252,7 +251,7 @@
         })
       })
     })
-  }($('.check-manually'))
+  }(document.querySelectorAll('.check-manually'))
 </script>
 </body>
 </html>
