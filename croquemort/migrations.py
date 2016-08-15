@@ -18,7 +18,7 @@ class MigrationsService(object):
     def delete_urls_for(self, domain):
         log('Deleting URLs for domain {domain}'.format(domain=domain))
         for url_hash, data in self.storage.get_all_urls():
-            if urlparse(data['url']).netloc == domain:
+            if data and urlparse(data['url']).netloc == domain:
                 self.storage.delete_url(url_hash)
 
     @rpc
