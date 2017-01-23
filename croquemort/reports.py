@@ -9,7 +9,7 @@ from jinja2 import Environment, FileSystemLoader
 from werkzeug.datastructures import Headers
 from werkzeug.wrappers import Response
 
-from .tools import apply_filters
+from .tools import apply_filters, retrieve_datetime
 
 template_path = os.path.join(os.path.dirname(__file__), 'templates')
 env = Environment(loader=FileSystemLoader(template_path), autoescape=True)
@@ -68,7 +68,7 @@ def compute_report(urls, filters, excludes, querystring, with_links=False):
         # Updates.
         updated = data.get('updated', '')
         if updated:
-            updated = datetime.strptime(updated, "%Y-%m-%dT%H:%M:%S.%f")
+            updated = retrieve_datetime(updated)
             if (updated + timedelta(days=1)) > today:
                 updates['Today'] += 1
             elif (updated + timedelta(days=7)) > today:

@@ -1,5 +1,6 @@
 import json
 import hashlib
+from datetime import datetime
 from urllib.parse import urlparse
 
 import logbook
@@ -81,3 +82,10 @@ def apply_filters(data, filters, excludes):
     elif excludes and not has_not_props:
         return
     return data
+
+
+def retrieve_datetime(datetime_isoformat):
+    try:
+        return datetime.strptime(datetime_isoformat, "%Y-%m-%dT%H:%M:%S.%f")
+    except ValueError:
+        return datetime.strptime(datetime_isoformat, "%Y-%m-%dT%H:%M:%S")
