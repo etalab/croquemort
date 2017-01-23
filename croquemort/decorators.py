@@ -5,7 +5,7 @@ import logbook
 import wrapt
 from werkzeug.wrappers import Response
 
-from .tools import data_from_request, flatten_get_parameters
+from .tools import data_from_request, flatten_get_parameters, retrieve_datetime
 
 log = logbook.debug
 
@@ -52,8 +52,7 @@ def cache_page(duration):
                                            data=urlencode(data))
         cached = instance.storage.get_cache(key)
         if cached:
-            timestamp = datetime.strptime(cached['timestamp'],
-                                          '%Y-%m-%dT%H:%M:%S.%f')
+            timestamp = retrieve_datetime(cached['timestamp'])
             if timestamp + timedelta(seconds=duration) > datetime.now():
                 return Response(cached['content'], mimetype='text/html')
         response = wrapped(*args, **kwargs)
