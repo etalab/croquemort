@@ -4,3 +4,4 @@ nameko==2.2.0
 pytest==2.8.2
 redis==2.10.3
 wrapt==1.10.4
+kombu>=3.0.1,<4
