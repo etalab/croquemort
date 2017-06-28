@@ -395,7 +395,7 @@ Before submitting any pull-request, you must ensure tests are passing.
 You should add tests for any new feature and/or bugfix.
 You can run tests with the following command:
 ```shell
-$ python -m pytest
+$ python -m pytest tests/
 ```
 
 You must have rabbitmq and redis running to pass the test.
