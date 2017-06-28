@@ -1,3 +1,11 @@
 machine:
   python:
     version: 3.6.1
+  services:
+    - rabbitmq-server
+    - redis
+  pre:
+    - sudo rabbitmq-plugins enable rabbitmq_management
+test:
+  override:
+    - python -m pytest tests/
