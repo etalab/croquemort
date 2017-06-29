@@ -1,42 +1,18 @@
 import json
 from mock import ANY
 
-import pytest
-from nameko.runners import ServiceRunner
 from nameko.standalone.events import event_dispatcher
-from nameko.testing.utils import get_container
 from nameko.testing.services import entrypoint_waiter, replace_dependencies
 
 from croquemort.crawler import CrawlerService
 from croquemort.http import HttpService
 
 
-@pytest.yield_fixture
-def runner_factory(container_config):
-    all_runners = []
-
-    def make_runner(*service_classes):
-        runner = ServiceRunner(container_config)
-        for service_cls in service_classes:
-            runner.add_service(service_cls)
-        all_runners.append(runner)
-        return runner
-
-    yield make_runner
-
-    for r in all_runners:
-        try:
-            r.stop()
-        except:
-            pass
-
-
-def test_retrieve_url(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
+def test_retrieve_url(container_factory, web_session, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     storage = replace_dependencies(http_container, 'storage')
     storage.get_url = lambda url_hash: {'url': url_hash}
-    runner.start()
+    http_container.start()
     rv = web_session.get('/url', data=json.dumps({
         'url': 'http://example.org/test_retrieve_url'
     }))
@@ -44,14 +20,13 @@ def test_retrieve_url(runner_factory, web_session):
     assert 'group' not in rv.json()
 
 
-def test_cache_report(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
+def test_cache_report(container_factory, web_session, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     storage = replace_dependencies(http_container, 'storage')
     storage.set_cache.return_value = None
     storage.get_cache.return_value = None
     storage.expire_cache.return_value = None
-    runner.start()
+    http_container.start()
 
     rv = web_session.get('/')
     cache_duration = 60 * 60 * 2  # Equals 2 hours.
@@ -62,15 +37,15 @@ def test_cache_report(runner_factory, web_session):
     storage.expire_cache.assert_called_once_with(default_key, cache_duration)
 
 
-def test_retrieve_url_with_group(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
+def test_retrieve_url_with_group(
+        container_factory, web_session, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     storage = replace_dependencies(http_container, 'storage')
     storage.get_url = lambda url_hash: {
         'url': url_hash,
         'group': 'datagouvfr'
     }
-    runner.start()
+    http_container.start()
     rv = web_session.get('/url', data=json.dumps({
         'url': 'http://example.org/test_retrieve_url_with_group'
     }))
@@ -78,9 +53,8 @@ def test_retrieve_url_with_group(runner_factory, web_session):
     assert rv.json()['group'] == 'datagouvfr'
 
 
-def test_retrieve_group(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
+def test_retrieve_group(container_factory, web_session, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     storage = replace_dependencies(http_container, 'storage')
     storage.get_group = lambda group_hash: {
         'url': group_hash,
@@ -88,7 +62,7 @@ def test_retrieve_group(runner_factory, web_session):
         'url_hash': 'url'
     }
     storage.get_url = lambda url_hash: {'url': url_hash}
-    runner.start()
+    http_container.start()
     rv = web_session.get('/group', data=json.dumps({
         'group': 'datagouvfr'
     }))
@@ -97,9 +71,9 @@ def test_retrieve_group(runner_factory, web_session):
     assert 'url_hash' in result['urls'][0].values()
 
 
-def test_retrieve_group_filtered(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
+def test_retrieve_group_filtered(
+        container_factory, web_session, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     storage = replace_dependencies(http_container, 'storage')
     storage.get_group = lambda group_hash: {
         'url': group_hash,
@@ -115,7 +89,7 @@ def test_retrieve_group_filtered(runner_factory, web_session):
         return result
 
     storage.get_url = get_url
-    runner.start()
+    http_container.start()
     rv = web_session.get('/group', data=json.dumps({
         'group': 'datagouvfr',
         'filter_metadata': 'meta'
@@ -126,9 +100,9 @@ def test_retrieve_group_filtered(runner_factory, web_session):
     assert 'url_hash2' not in result['urls'][0].values()
 
 
-def test_retrieve_group_excluded(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
+def test_retrieve_group_excluded(
+        container_factory, web_session, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     storage = replace_dependencies(http_container, 'storage')
     storage.get_group = lambda group_hash: {
         'url': group_hash,
@@ -144,7 +118,7 @@ def test_retrieve_group_excluded(runner_factory, web_session):
         return result
 
     storage.get_url = get_url
-    runner.start()
+    http_container.start()
     rv = web_session.get('/group', data=json.dumps({
         'group': 'datagouvfr',
         'exclude_metadata': 'meta'
@@ -155,9 +129,9 @@ def test_retrieve_group_excluded(runner_factory, web_session):
     assert 'url_hash2' in result['urls'][0].values()
 
 
-def test_retrieve_group_excluded_empty(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
+def test_retrieve_group_excluded_empty(
+        container_factory, web_session, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     storage = replace_dependencies(http_container, 'storage')
     storage.get_group = lambda group_hash: {
         'url': group_hash,
@@ -173,7 +147,7 @@ def test_retrieve_group_excluded_empty(runner_factory, web_session):
         return result
 
     storage.get_url = get_url
-    runner.start()
+    http_container.start()
     rv = web_session.get('/group', data=json.dumps({
         'group': 'datagouvfr',
         'exclude_metadata': ''
@@ -184,11 +158,10 @@ def test_retrieve_group_excluded_empty(runner_factory, web_session):
     assert 'url_hash2' in result['urls'][0].values()
 
 
-def test_checking_one(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
+def test_checking_one(container_factory, web_session, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     dispatch = replace_dependencies(http_container, 'dispatch')
-    runner.start()
+    http_container.start()
     rv = web_session.post('/check/one', data=json.dumps({
         'url': 'http://example.org/test_checking_one'
     }))
@@ -196,11 +169,10 @@ def test_checking_one(runner_factory, web_session):
     assert dispatch.call_count == 1
 
 
-def test_checking_many(runner_factory, web_session):
-    runner = runner_factory(HttpService)
-    http_container = get_container(runner, HttpService)
+def test_checking_many(container_factory, web_session, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     dispatch = replace_dependencies(http_container, 'dispatch')
-    runner.start()
+    http_container.start()
     rv = web_session.post('/check/many', data=json.dumps({
         'urls': [
             'http://example.org/test_checking_many',
@@ -212,23 +184,20 @@ def test_checking_many(runner_factory, web_session):
     assert dispatch.call_count == 2
 
 
-def test_fetching(runner_factory, rpc_proxy_factory):
-    runner = runner_factory(HttpService)
+def test_fetching(container_factory, rpc_proxy_factory, web_container_config):
+    http_container = container_factory(HttpService, web_container_config)
     http_server = rpc_proxy_factory('http_server')
-    http_container = get_container(runner, HttpService)
     dispatch = replace_dependencies(http_container, 'dispatch')
-    runner.start()
+    http_container.start()
     http_server.fetch('http://example.org/test_fetching')
     assert dispatch.call_count == 1
 
 
-def test_crawling_url(runner_factory, rpc_proxy_factory):
-    runner = runner_factory(CrawlerService)
-    crawler_container = get_container(runner, CrawlerService)
+def test_crawling_url(container_factory, rabbit_config, web_container_config):
+    crawler_container = container_factory(CrawlerService, web_container_config)
     storage = replace_dependencies(crawler_container, 'storage')
-    runner.start()
-    config = {'AMQP_URI': 'amqp://guest:guest@localhost:5672/nameko_test'}
-    dispatch = event_dispatcher(config)
+    crawler_container.start()
+    dispatch = event_dispatcher(rabbit_config)
     with entrypoint_waiter(crawler_container, 'check_url'):
         dispatch('http_server', 'url_to_check',
                  ['http://example.org/test_crawling_url', None, None])
@@ -237,13 +206,12 @@ def test_crawling_url(runner_factory, rpc_proxy_factory):
     assert storage.store_metadata.call_count == 1
 
 
-def test_crawling_group(runner_factory, rpc_proxy_factory):
-    runner = runner_factory(CrawlerService)
-    crawler_container = get_container(runner, CrawlerService)
+def test_crawling_group(
+        container_factory, rabbit_config, web_container_config):
+    crawler_container = container_factory(CrawlerService, web_container_config)
     storage = replace_dependencies(crawler_container, 'storage')
-    runner.start()
-    config = {'AMQP_URI': 'amqp://guest:guest@localhost:5672/nameko_test'}
-    dispatch = event_dispatcher(config)
+    crawler_container.start()
+    dispatch = event_dispatcher(rabbit_config)
     with entrypoint_waiter(crawler_container, 'check_url'):
         dispatch('http_server', 'url_to_check',
                  ['http://example.org/test_crawling_group',

@@ -6,8 +6,8 @@ from croquemort.http import HttpService
 
 
 @pytest.fixture
-def web_session(container_factory, web_config, web_session):
-    container = container_factory(HttpService, web_config)
+def web_session(container_factory, web_container_config, web_session):
+    container = container_factory(HttpService, web_container_config)
     container.start()
     return web_session
 
