@@ -8,8 +8,8 @@ from croquemort.webhook import WebhookService
 
 def test_crawler_triggers_webhook(runner_factory, web_container_config):
     """Is crawler_container dispatching to webhook_container?"""
-    runner = runner_factory(
-        web_container_config, CrawlerService, WebhookService)
+    runner = runner_factory(web_container_config, CrawlerService,
+                            WebhookService)
     webhook_container = get_container(runner, WebhookService)
     storage_w = replace_dependencies(webhook_container, 'storage')
     dispatch = event_dispatcher(web_container_config)
