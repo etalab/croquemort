@@ -1,7 +1,6 @@
-Jinja2==2.8
-Logbook==0.9.1
-nameko==2.2.0
-pytest==2.8.2
-redis==2.10.3
-wrapt==1.10.4
-kombu>=3.0.1,<4
+Jinja2==2.9.6
+Logbook==1.0.0
+nameko==2.6.0
+pytest==3.1.2
+redis==2.10.5
+wrapt==1.10.10

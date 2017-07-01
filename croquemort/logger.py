@@ -1,8 +1,12 @@
 import datetime
+import sys
 from weakref import WeakKeyDictionary
 
-import logbook
+from logbook import Logger, StreamHandler
 from nameko.extensions import DependencyProvider
+
+StreamHandler(sys.stdout).push_application()
+logbook = Logger('Generic')
 
 
 class LoggingDependency(DependencyProvider):
