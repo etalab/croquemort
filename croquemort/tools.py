@@ -1,5 +1,6 @@
 import json
 import hashlib
+import re
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -12,6 +13,7 @@ HASH_PREFIXES = {
     'url': 'u',
     'group': 'g',
     'check': 'c',
+    'webhook': 'w',
 }
 
 
@@ -44,7 +46,8 @@ def generate_hash_for(hash_type, value):
     """Return a hash prefixed for hash_type"""
     prefix = HASH_PREFIXES.get(hash_type)
     if not prefix:
-        raise Exception('Unknown hash_type {}'.format(hash_type))
+        raise Exception('Unknown hash_type {} in {}'.format(hash_type,
+                                                            HASH_PREFIXES))
     return '{}:{}'.format(prefix, _generate_hash(value))
 
 
@@ -104,3 +107,12 @@ def retrieve_datetime(datetime_isoformat):
         return datetime.strptime(datetime_isoformat, "%Y-%m-%dT%H:%M:%S.%f")
     except ValueError:
         return datetime.strptime(datetime_isoformat, "%Y-%m-%dT%H:%M:%S")
+
+
+def is_url(url):
+    # See https://github.com/kvesteri/validators for reference.
+    url_pattern = re.compile(
+        r'^[a-z]+://([^/:]+\.[a-z]{2,10}|([0-9]{{1,3}}\.)'
+        r'{{3}}[0-9]{{1,3}})(:[0-9]+)?(\/.*)?$'
+    )
+    return url_pattern.match(url)

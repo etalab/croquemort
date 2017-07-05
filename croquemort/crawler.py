@@ -1,19 +1,12 @@
-import re
-
 import collections
 import logbook
 import requests
 
-from nameko.events import event_handler
+from nameko.events import event_handler, EventDispatcher
 
 from .logger import LoggingDependency
 from .storages import RedisStorage
-
-# See https://github.com/kvesteri/validators for reference.
-url_pattern = re.compile(
-    r'^[a-z]+://([^/:]+\.[a-z]{2,10}|([0-9]{{1,3}}\.)'
-    r'{{3}}[0-9]{{1,3}})(:[0-9]+)?(\/.*)?$'
-)
+from .tools import is_url
 
 log = logbook.debug
 FakeResponse = collections.namedtuple('Response', ['status_code', 'headers'])
@@ -26,6 +19,7 @@ class CrawlerService(object):
     name = 'url_crawler'
     storage = RedisStorage()
     logger = LoggingDependency()
+    dispatch = EventDispatcher()
 
     @event_handler('http_server', 'url_to_check')
     @event_handler('timer', 'url_to_check')
@@ -33,7 +27,7 @@ class CrawlerService(object):
         url, group, frequency = url_group_frequency
         log(('Checking {url} for group {group} and frequency "{frequency}"'
              .format(url=url, group=group, frequency=frequency)))
-        if not url_pattern.match(url):
+        if not is_url(url):
             logbook.error('Error with {url}: not a URL'.format(url=url))
             return
         self.storage.store_url(url)
@@ -52,4 +46,7 @@ class CrawlerService(object):
         except Exception as e:
             logbook.error('Error with {url}: {e}'.format(url=url, e=e))
             return
-        self.storage.store_metadata(url, response)
+        finally:
+            self.storage.remove_check_flag(url)
+        metadata = self.storage.store_metadata(url, response)
+        self.dispatch('url_crawled', metadata)

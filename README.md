@@ -352,6 +352,56 @@ The `delete_urls_for` is useful if you want to delete all URLs related to a give
 You are encouraged to add your own generic migrations to the service and share those with the community via pull-requests (see below).
 
 
+### Webhook
+
+Instead of polling the results endpoints to get the results of one or many URLs checks, you can ask Croquemort to call a webhook when a check is completed.
+
+```shell
+$ nameko run croquemort.webhook
+starting services: webhook_dispatcher
+Connected to amqp://guest:**@127.0.0.1:5672//
+```
+
+You can now specify a `callback_url` parameter when you `POST` against `/check/one` or `/check/many`.
+
+```shell
+$ http :8000/check/one url="https://www.data.gouv.fr/fr/" callback_url="http://example.org/cb"
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Length: 28
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 03 Jun 2015 14:21:50 GMT
+
+{
+  "url-hash": "fc6040c5"
+}
+```
+
+When the check is completed, a `POST` request should be emitted to `http://example.org/cb` with the metadata of the check. The webhook service expects a successfull (e.g. 200) HTTP status code. If not, it will retry (by default) 5 times, waiting at first 10 seconds before retrying then increasing the delay by a factor of 2 at each try. You can customize those values by setting the variables `WEBHOOK_RETRY`, `WEBHOOK_DELAY` and `WEBHOOK_BACKOFF`.
+
+```json
+{
+  "data": {
+    "url": "http://yahoo.fr",
+    "group": "a80c20d4",
+    "frequency": "hourly",
+    "status": "200",
+    "updated": "2017-07-10T12:50:20.219819",
+    "etag": "",
+    "expires": "-1",
+    "last-modified": "",
+    "charset": "utf-8",
+    "content-type": "text/html",
+    "content-length": "",
+    "content-disposition": "",
+    "content-md5": "",
+    "content-encoding": "gzip",
+    "content-location": ""
+  }
+}
+```
+
+
 ## Contributing
 
 We’re really happy to accept contributions from the community, that’s the main reason why we open-sourced it! There are many ways to contribute, even if you’re not a technical person.

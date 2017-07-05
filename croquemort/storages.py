@@ -39,6 +39,10 @@ class RedisStorage(DependencyProvider):
     def get_group(self, group_hash):
         return self.database.hgetall(str_to_bytes(group_hash))
 
+    def get_webhooks_for_url(self, url):
+        w_hash = generate_hash_for('webhook', url)
+        return self.database.lrange(str_to_bytes(w_hash), 0, -1)
+
     def delete_url(self, url_hash, data=None):
         if data is None:
             data = self.get_url(url_hash)
@@ -82,6 +86,15 @@ class RedisStorage(DependencyProvider):
                     self.store_content_type(url_hash, value)
                 else:
                     self.database.hset(url_hash, header, str_to_bytes(value))
+        return self.get_url(url_hash)
+
+    def store_webhook(self, url, callback_url):
+        """
+        Store a webhook to be called when at callback_url when url is checked
+        """
+        if callback_url not in self.get_webhooks_for_url(url):
+            w_hash = generate_hash_for('webhook', url)
+            self.database.rpush(w_hash, str_to_bytes(callback_url))
 
     def store_content_type(self, url_hash, value):
         try:
@@ -106,7 +119,12 @@ class RedisStorage(DependencyProvider):
             for url_hash, url in group_infos.iteritems():
                 yield url
 
-    def is_currently_checked(self, url, delay):  # In seconds.
+    def is_currently_checked(self, url, delay=60*10):  # In seconds.
+        """Will look for check flag and set it if not there.
+
+        The flag should be removed by `remove_check_flag` but will be removed
+        after `delay` anyhow.
+        """
         check_url_hash = generate_hash_for('check', url)
         if self.database.exists(check_url_hash):
             return True
@@ -114,6 +132,11 @@ class RedisStorage(DependencyProvider):
             self.database.set(check_url_hash, url)
             self.database.expire(check_url_hash, delay)
             return False
+
+    def remove_check_flag(self, url):
+        check_url_hash = generate_hash_for('check', url)
+        if self.database.exists(check_url_hash):
+            self.database.delete(check_url_hash)
 
     def get_cache(self, key):
         return self.database.hgetall(str_to_bytes(key))
