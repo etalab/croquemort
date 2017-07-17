@@ -7,6 +7,13 @@ import logbook
 
 log = logbook.debug
 
+# /!\ dict values should be kept unique for sanity
+HASH_PREFIXES = {
+    'url': 'u',
+    'group': 'g',
+    'check': 'c',
+}
+
 
 def data_from_request(request):
     """Return a dict of data from a JSON request, idempotent."""
@@ -28,9 +35,17 @@ def flatten_get_parameters(request):
             for k, v in dict(request.args).items()}
 
 
-def generate_hash(value):
+def _generate_hash(value):
     """Custom hash to avoid long values."""
     return hashlib.md5(value.encode('utf-8')).hexdigest()[:8]
+
+
+def generate_hash_for(hash_type, value):
+    """Return a hash prefixed for hash_type"""
+    prefix = HASH_PREFIXES.get(hash_type)
+    if not prefix:
+        raise Exception('Unknown hash_type {}'.format(hash_type))
+    return '{}:{}'.format(prefix, _generate_hash(value))
 
 
 def extract_filters(querystring_dict):

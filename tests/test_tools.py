@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 
 from croquemort.tools import (
-    apply_filters, data_from_request, extract_filters, generate_hash
+    apply_filters, data_from_request, extract_filters, _generate_hash,
+    generate_hash_for
 )
 
 
@@ -13,8 +14,14 @@ def test_data_from_request():
 
 
 def test_generate_hash():
-    assert generate_hash('foo') == 'acbd18db'
-    assert generate_hash('bar') == '37b51d19'
+    assert _generate_hash('foo') == 'acbd18db'
+    assert _generate_hash('bar') == '37b51d19'
+
+
+def test_generate_hash_for():
+    assert generate_hash_for('url', 'foo') == 'u:acbd18db'
+    assert generate_hash_for('group', 'bar') == 'g:37b51d19'
+    assert generate_hash_for('check', 'bar') == 'c:37b51d19'
 
 
 def test_extract_filters():
