@@ -22,6 +22,7 @@ def test_generate_hash_for():
     assert generate_hash_for('url', 'foo') == 'u:acbd18db'
     assert generate_hash_for('group', 'bar') == 'g:37b51d19'
     assert generate_hash_for('check', 'bar') == 'c:37b51d19'
+    assert generate_hash_for('webhook', 'foo') == 'w:acbd18db'
 
 
 def test_extract_filters():
