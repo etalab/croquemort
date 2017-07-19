@@ -10,7 +10,7 @@ from .decorators import cache_page, required_parameters
 from .logger import LoggingDependency
 from .reports import compute_csv, compute_report
 from .storages import RedisStorage
-from .tools import apply_filters, extract_filters, generate_hash
+from .tools import apply_filters, extract_filters, generate_hash_for
 
 log = logbook.debug
 
@@ -29,7 +29,7 @@ class HttpService(object):
         log('Retrieving url {url} for group {group}'.format(
             url=url, group=group))
         self.fetch(url, group)  # Try again for later check.
-        return self.retrieve_url_from_hash(data, generate_hash(url))
+        return self.retrieve_url_from_hash(data, generate_hash_for('url', url))
 
     @http('GET', '/url/<url_hash>')
     def retrieve_url_from_hash(self, request_or_data, url_hash):
@@ -45,7 +45,8 @@ class HttpService(object):
     def retrieve_group(self, data):
         group = data.get('group')
         log('Retrieving group {group}'.format(group=group))
-        return self.retrieve_group_from_hash(data, generate_hash(group))
+        return self.retrieve_group_from_hash(data,
+                                             generate_hash_for('group', group))
 
     @http('GET', '/group/<group_hash>')
     @required_parameters()
@@ -103,7 +104,7 @@ class HttpService(object):
     def check_one(self, data):
         url = data.get('url')
         group = data.get('group', None)
-        url_hash = generate_hash(url)
+        url_hash = generate_hash_for('url', url)
         log('Checking "{url}" ({hash}) in group "{group}"'.format(
             url=url, hash=url_hash, group=group))
         self.fetch(url, group=group)
@@ -114,7 +115,7 @@ class HttpService(object):
     def check_many(self, data):
         urls = data.get('urls')
         group = data.get('group')
-        group_hash = generate_hash(group)
+        group_hash = generate_hash_for('group', group)
         frequency = data.get('frequency', None)
         log(('Checking {num} URLs in group "{group}" ({hash}) '
              'with frequency "{frequency}"'.format(num=len(urls), group=group,

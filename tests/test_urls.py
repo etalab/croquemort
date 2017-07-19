@@ -56,7 +56,7 @@ def test_post_url(web_session):
     rv = web_session.post('/check/one', data=json.dumps({
         'url': 'http://example.org'
     }))
-    assert rv.json()['url-hash'] == 'dab521de'
+    assert rv.json()['url-hash'] == 'u:dab521de'
     assert rv.status_code == 200
 
 
@@ -65,7 +65,7 @@ def test_post_urls(web_session):
         'urls': ['http://example.org', 'http://example.com'],
         'group': 'datagouvfr'
     }))
-    assert rv.json()['group-hash'] == 'efcf3897'
+    assert rv.json()['group-hash'] == 'g:efcf3897'
     assert rv.status_code == 200
 
 

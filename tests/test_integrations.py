@@ -16,7 +16,7 @@ def test_retrieve_url(container_factory, web_session, web_container_config):
     rv = web_session.get('/url', data=json.dumps({
         'url': 'http://example.org/test_retrieve_url'
     }))
-    assert rv.json()['url'] == '9c01c218'
+    assert rv.json()['url'] == 'u:9c01c218'
     assert 'group' not in rv.json()
 
 
@@ -49,7 +49,7 @@ def test_retrieve_url_with_group(
     rv = web_session.get('/url', data=json.dumps({
         'url': 'http://example.org/test_retrieve_url_with_group'
     }))
-    assert rv.json()['url'] == '462bd375'
+    assert rv.json()['url'] == 'u:462bd375'
     assert rv.json()['group'] == 'datagouvfr'
 
 
@@ -165,7 +165,7 @@ def test_checking_one(container_factory, web_session, web_container_config):
     rv = web_session.post('/check/one', data=json.dumps({
         'url': 'http://example.org/test_checking_one'
     }))
-    assert rv.json()['url-hash'] == 'a55f9fb5'
+    assert rv.json()['url-hash'] == 'u:a55f9fb5'
     assert dispatch.call_count == 1
 
 
@@ -180,7 +180,7 @@ def test_checking_many(container_factory, web_session, web_container_config):
         ],
         'group': 'datagouvfr'
     }))
-    assert rv.json()['group-hash'] == 'efcf3897'
+    assert rv.json()['group-hash'] == 'g:efcf3897'
     assert dispatch.call_count == 2
 
 

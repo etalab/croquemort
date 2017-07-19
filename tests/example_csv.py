@@ -2,7 +2,7 @@ import argparse
 
 from nameko.standalone.rpc import ClusterRpcProxy
 
-from croquemort.tools import generate_hash
+from croquemort.tools import generate_hash_for
 
 config = {
     'AMQP_URI': 'amqp://guest:guest@localhost',
@@ -22,4 +22,5 @@ with ClusterRpcProxy(config) as cluster_rpc:
                                             args.frequency or None)
 
 if args.group:
-    print('Group hash: {hash}'.format(hash=generate_hash(args.group)))
+    print('Group hash: {hash}'.format(hash=generate_hash_for('group',
+                                                             args.group)))

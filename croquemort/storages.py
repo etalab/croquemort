@@ -4,7 +4,7 @@ import redis
 from nameko.extensions import DependencyProvider
 from kombu.utils.encoding import str_to_bytes
 
-from .tools import generate_hash
+from .tools import generate_hash_for
 
 
 REDIS_URI_KEY = 'REDIS_URI'
@@ -47,28 +47,28 @@ class RedisStorage(DependencyProvider):
         self.database.lrem('urls', 0, url_hash)
 
     def store_url(self, url):
-        url_hash = generate_hash(url)
+        url_hash = generate_hash_for('url', url)
         self.database.hset(url_hash, 'url', str_to_bytes(url))
         if url_hash not in self.database.lrange('urls', 0, -1):
             self.database.rpush('urls', str_to_bytes(url_hash))
 
     def store_group(self, url, group):
-        url_hash = generate_hash(url)
-        group_hash = generate_hash(group)
+        url_hash = generate_hash_for('url', url)
+        group_hash = generate_hash_for('group', group)
         self.database.hset(url_hash, 'group', str_to_bytes(group_hash))
         self.database.hset(group_hash, 'name', str_to_bytes(group))
         self.database.hset(group_hash, url_hash, str_to_bytes(url))
         self.database.hset(group_hash, 'url', str_to_bytes(url))
 
     def store_frequency(self, url, group, frequency):
-        url_hash = generate_hash(url)
-        group_hash = generate_hash(group)
+        url_hash = generate_hash_for('url', url)
+        group_hash = generate_hash_for('group', group)
         self.database.hset(url_hash, 'frequency', str_to_bytes(frequency))
         if group_hash not in self.database.lrange(frequency, 0, -1):
             self.database.rpush(frequency, str_to_bytes(group_hash))
 
     def store_metadata(self, url, response):
-        url_hash = generate_hash(url)
+        url_hash = generate_hash_for('url', url)
         self.database.hset(url_hash, 'status',
                            str_to_bytes(response.status_code))
         self.database.hset(url_hash, 'updated',
@@ -107,7 +107,7 @@ class RedisStorage(DependencyProvider):
                 yield url
 
     def is_currently_checked(self, url, delay):  # In seconds.
-        check_url_hash = 'check-{hash}'.format(hash=generate_hash(url))
+        check_url_hash = generate_hash_for('check', url)
         if self.database.exists(check_url_hash):
             return True
         else:
