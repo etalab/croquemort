@@ -1,4 +1,4 @@
-import logbook
+import logging
 import requests
 
 from nameko.dependency_providers import Config
@@ -8,7 +8,7 @@ from nameko.utils.retry import retry
 from .logger import LoggingDependency
 from .storages import RedisStorage
 
-log = logbook.debug
+log = logging.info
 
 # See http://docs.python-requests.org/en/latest/user/advanced/#timeouts
 # We are waiting 3 sec for the connexion and 9 for the response.
@@ -69,6 +69,6 @@ class WebhookService(object):
                                             BACKOFF_FACTOR))
                 send(callback_url, metadata)
             except WebhookUnreachableException as e:
-                logbook.error(('Webhook unreachable: {url} - {code} ({detail})'
+                logging.error(('Webhook unreachable: {url} - {code} ({detail})'
                                .format(url=callback_url, code=e.code,
                                        detail=e.original_exception)))

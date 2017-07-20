@@ -1,7 +1,7 @@
 import json
 from urllib.parse import urlencode
 
-import logbook
+import logging
 from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
@@ -12,7 +12,7 @@ from .reports import compute_csv, compute_report
 from .storages import RedisStorage
 from .tools import apply_filters, extract_filters, generate_hash_for, is_url
 
-log = logbook.debug
+log = logging.info
 
 
 class HttpService(object):

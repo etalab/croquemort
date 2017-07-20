@@ -4,9 +4,9 @@ import re
 from datetime import datetime
 from urllib.parse import urlparse
 
-import logbook
+import logging
 
-log = logbook.debug
+log = logging.info
 
 # /!\ dict values should be kept unique for sanity
 HASH_PREFIXES = {

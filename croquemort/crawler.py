@@ -1,5 +1,5 @@
 import collections
-import logbook
+import logging
 import requests
 
 from nameko.events import event_handler, EventDispatcher
@@ -8,7 +8,7 @@ from .logger import LoggingDependency
 from .storages import RedisStorage
 from .tools import is_url
 
-log = logbook.debug
+log = logging.info
 FakeResponse = collections.namedtuple('Response', ['status_code', 'headers'])
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=50)
@@ -28,7 +28,7 @@ class CrawlerService(object):
         log(('Checking {url} for group {group} and frequency "{frequency}"'
              .format(url=url, group=group, frequency=frequency)))
         if not is_url(url):
-            logbook.error('Error with {url}: not a URL'.format(url=url))
+            logging.error('Error with {url}: not a URL'.format(url=url))
             return
         self.storage.store_url(url)
         if group:
@@ -44,7 +44,7 @@ class CrawlerService(object):
         except requests.exceptions.ConnectionError:
             response = FakeResponse(status_code=503, headers={})
         except Exception as e:
-            logbook.error('Error with {url}: {e}'.format(url=url, e=e))
+            logging.error('Error with {url}: {e}'.format(url=url, e=e))
             return
         finally:
             self.storage.remove_check_flag(url)

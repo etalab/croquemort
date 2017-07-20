@@ -54,11 +54,17 @@ starting services: url_crawler
 Connected to amqp://guest:**@127.0.0.1:5672//
 ```
 
-You can optionnaly use the proposed configuration with more workers for the crawler (from 10 (default) to 50):
+You can optionnaly use the proposed configuration (and tweak it) to get some logs (`INFO` level by default):
 
 ```shell
-$ nameko run --config config_crawler.yaml croquemort.crawler
+$ nameko run --config config.yaml croquemort.crawler
 ```
+
+You can enable in the config file more workers for the crawler (from 10 (default) to 50):
+```yaml
+max_workers: 50
+```
+
 
 
 ### Browsing your data
@@ -291,7 +297,7 @@ Date: Wed, 03 Jun 2015 14:27:58 GMT
 }
 ```
 
-Note that in both cases, the `http` and the `crawler` services return interesting logging information for debugging.
+Note that in both cases, the `http` and the `crawler` services return interesting logging information for debugging (if you pass the `--config config.yaml` option to the `run` command).
 
 
 ### Computing many URLs
