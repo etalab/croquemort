@@ -63,10 +63,12 @@ class MigrationsService(object):
 
     def _migrate_urls_list(self):
         """Used by `add_hash_prefixes` to migrate the url list"""
-        log('Migration urls list')
+        log('Migrating urls list')
         database = self.storage.database
         url_prefix, group_prefix = self._get_hash_prefixes()
         for idx, url_hash in enumerate(database.lrange('urls', 0, -1)):
+            if url_hash.startswith(url_prefix):
+                continue
             new_hash = '{}{}'.format(url_prefix, url_hash)
             database.lset('urls', idx, new_hash)
 
@@ -96,7 +98,7 @@ class MigrationsService(object):
         NB1: checks are not migrated because they expire quite fast
         NB2: should be idempotent
         """
-        log('Adding hash prefixes')
+        log('Adding hash prefixes...')
         database = self.storage.database
         url_prefix, group_prefix = self._get_hash_prefixes()
         for key in database.scan_iter():
@@ -115,6 +117,7 @@ class MigrationsService(object):
         self._migrate_urls_list()
         for freq in ['hourly', 'daily', 'monthly']:
             self._migrate_frequency(freq)
+        log('Hash prefixes added.')
 
     @rpc
     def migrate_urls_redirect(self):
@@ -129,6 +132,7 @@ class MigrationsService(object):
 
         NB: should be idempotent
         """
+        log('Migrating url schema...')
         database = self.storage.database
         for url_hash, data in self.storage.get_all_urls():
             if data.get('checked-url'):
@@ -145,3 +149,16 @@ class MigrationsService(object):
             else:
                 log('No url for hash %s (%s) - deleting' % (url_hash, data))
                 database.delete(url_hash)
+        log('Url schema migration done.')
+
+    @rpc
+    def migrate_from_1_to_2(self):
+        """
+        [migration from 1.0.0 to 2.0.0]
+
+        Helper to call all migrations needed from v1 to v2.
+        """
+        log('Migrating from 1 to 2...')
+        self.add_hash_prefixes()
+        self.migrate_urls_redirect()
+        log('Migration done.')
