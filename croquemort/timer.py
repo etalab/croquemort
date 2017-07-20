@@ -1,4 +1,4 @@
-import logbook
+import logging
 
 from nameko.events import EventDispatcher
 from nameko.timer import timer
@@ -6,7 +6,7 @@ from nameko.timer import timer
 from .logger import LoggingDependency
 from .storages import RedisStorage
 
-log = logbook.debug
+log = logging.info
 
 
 class TimerService(object):

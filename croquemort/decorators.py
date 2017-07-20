@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
-import logbook
+import logging
 import wrapt
 from werkzeug.wrappers import Response
 
 from .tools import data_from_request, flatten_get_parameters, retrieve_datetime
 
-log = logbook.debug
+log = logging.info
 
 
 def required_parameters(*parameters):

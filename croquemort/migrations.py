@@ -1,13 +1,13 @@
 from urllib.parse import urlparse
 
-import logbook
+import logging
 from nameko.rpc import rpc
 
 from .logger import LoggingDependency
 from .storages import RedisStorage
 from .tools import HASH_PREFIXES
 
-log = logbook.debug
+log = logging.info
 
 
 class MigrationsService(object):
