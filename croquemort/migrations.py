@@ -83,6 +83,8 @@ class MigrationsService(object):
     @rpc
     def add_hash_prefixes(self):
         """
+        [migration from 1.0.0 to 2.0.0]
+
         Add url and group hash prefixes where they are missing:
         - /urls[<uhash>] -> /urls[<u:uhash>]
         - /<uhash> -> /<u:uhash>
@@ -113,3 +115,33 @@ class MigrationsService(object):
         self._migrate_urls_list()
         for freq in ['hourly', 'daily', 'monthly']:
             self._migrate_frequency(freq)
+
+    @rpc
+    def migrate_urls_redirect(self):
+        """
+        [migration from 1.0.0 to 2.0.0]
+
+        Migrate all the url hash fields to the new schema adopted with the
+        "redirect handling" feature. We do not fill `final-url` for stock data
+        because we have no way to know if a redirection has been made.
+
+        Plus, cleanup url hashes with no url field attached.
+
+        NB: should be idempotent
+        """
+        database = self.storage.database
+        for url_hash, data in self.storage.get_all_urls():
+            if data.get('checked-url'):
+                continue
+            if data.get('url'):
+                database.hset(url_hash, 'checked-url', data['url'])
+                database.hdel(url_hash, 'url')
+                if data.get('status'):
+                    database.hset(url_hash, 'final-status-code',
+                                  data['status'])
+                    database.hdel(url_hash, 'status')
+                else:
+                    log('Missing status for hash %s (%s)' % (url_hash, data))
+            else:
+                log('No url for hash %s (%s) - deleting' % (url_hash, data))
+                database.delete(url_hash)

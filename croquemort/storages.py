@@ -52,7 +52,7 @@ class RedisStorage(DependencyProvider):
 
     def store_url(self, url):
         url_hash = generate_hash_for('url', url)
-        self.database.hset(url_hash, 'url', str_to_bytes(url))
+        self.database.hset(url_hash, 'checked-url', str_to_bytes(url))
         if url_hash not in self.database.lrange('urls', 0, -1):
             self.database.rpush('urls', str_to_bytes(url_hash))
 
@@ -73,7 +73,9 @@ class RedisStorage(DependencyProvider):
 
     def store_metadata(self, url, response):
         url_hash = generate_hash_for('url', url)
-        self.database.hset(url_hash, 'status',
+        self.database.hset(url_hash, 'final-url',
+                           str_to_bytes(response.url))
+        self.database.hset(url_hash, 'final-status-code',
                            str_to_bytes(response.status_code))
         self.database.hset(url_hash, 'updated',
                            str_to_bytes(datetime.now().isoformat()))
@@ -86,6 +88,12 @@ class RedisStorage(DependencyProvider):
                     self.store_content_type(url_hash, value)
                 else:
                     self.database.hset(url_hash, header, str_to_bytes(value))
+        # deal w/ redirect if any
+        if len(response.history):
+            self.database.hset(url_hash, 'redirect-url',
+                               str_to_bytes(response.history[0].url))
+            self.database.hset(url_hash, 'redirect-status-code',
+                               str_to_bytes(response.history[0].status_code))
         return self.get_url(url_hash)
 
     def store_webhook(self, url, callback_url):
