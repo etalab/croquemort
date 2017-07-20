@@ -461,18 +461,18 @@ A ``docker-compose.yml`` file is provided to be quickly ready:
 $ docker-compose up -d
 Creating croquemort_redis_1...
 Creating croquemort_rabbitmq_1...
-$ python -m pytest
+$ python -m pytest tests/
 ```
 
 In the case you use your own middleware with different configuration,
 you can pass this configuration as py.test command line arguments:
 ```shell
-python -m pytest --redis-uri=redis://myredis:6379/0 --amqp-uri=amqp://john:doe@myrabbit
+python -m pytest tests/ --redis-uri=redis://myredis:6379/0 --amqp-uri=amqp://john:doe@myrabbit
 ```
 
 Read the py.test help to see all available options:
 ```shell
-python -m pytest --help
+python -m pytest tests/ --help
 ```
 
 
