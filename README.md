@@ -489,3 +489,4 @@ We’re using the [MIT license](https://tldrlegal.com/license/mit-license).
 ## Credits
 
 * [David Larlet](https://larlet.fr/david/)
+* [Alexandre Bulté](http://alexandre.bulte.net/)
