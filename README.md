@@ -101,13 +101,14 @@ Date: Wed, 03 Jun 2015 14:22:57 GMT
 
 {
   "etag": "",
-  "url": "https://www.data.gouv.fr/fr/",
+  "checked-url": "https://www.data.gouv.fr/fr/",
+  "final-url": "https://www.data.gouv.fr/fr/",
   "content-length": "",
   "content-disposition": "",
   "content-md5": "",
   "content-location": "",
   "expires": "",
-  "status": "200",
+  "final-status-code": "200",
   "updated": "2015-06-03T16:21:52.569974",
   "last-modified": "",
   "content-encoding": "gzip",
@@ -127,13 +128,14 @@ Date: Wed, 03 Jun 2015 14:23:35 GMT
 
 {
   "etag": "",
-  "url": "https://www.data.gouv.fr/fr/",
+  "checked-url": "https://www.data.gouv.fr/fr/",
+  "final-url": "https://www.data.gouv.fr/fr/",
   "content-length": "",
   "content-disposition": "",
   "content-md5": "",
   "content-location": "",
   "expires": "",
-  "status": "200",
+  "final-status-code": "200",
   "updated": "2015-06-03T16:21:52.569974",
   "last-modified": "",
   "content-encoding": "gzip",
@@ -178,8 +180,9 @@ Date: Wed, 03 Jun 2015 14:26:04 GMT
     "group": "efcf3897",
     "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT",
     "content-md5": "",
-    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
-    "status": "200",
+    "checked-url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
+    "final-url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
+    "final-status-code": "200",
     "expires": "",
     "content-type": "image/png",
     "content-length": "280919",
@@ -198,10 +201,11 @@ Date: Wed, 03 Jun 2015 14:26:04 GMT
     "content-length": "",
     "expires": "",
     "content-type": "text/html; charset=utf-8",
-    "status": "200",
+    "final-status-code": "200",
     "updated": "2015-06-03T16:24:02.398105",
     "etag": "",
-    "url": "https://www.data.gouv.fr/fr/"
+    "checked-url": "https://www.data.gouv.fr/fr/"
+    "final-url": "https://www.data.gouv.fr/fr/"
   }
 }
 ```
@@ -218,13 +222,14 @@ Date: Wed, 03 Jun 2015 14:23:35 GMT
 
 {
   "etag": "",
-  "url": "https://www.data.gouv.fr/fr/",
+  "checked-url": "https://www.data.gouv.fr/fr/",
+  "final-url": "https://www.data.gouv.fr/fr/",
   "content-length": "",
   "content-disposition": "",
   "content-md5": "",
   "content-location": "",
   "expires": "",
-  "status": "200",
+  "final-status-code": "200",
   "updated": "2015-06-03T16:21:52.569974",
   "last-modified": "",
   "content-encoding": "gzip",
@@ -233,6 +238,31 @@ Date: Wed, 03 Jun 2015 14:23:35 GMT
 ```
 
 Both return the same amount of information.
+
+
+### Redirect handling
+
+Both when fetching one and many urls, croquemort has basic support of HTTP redirections. First, croquemort follows eventual redirections to the final destination (`allow_redirects` option of the `requests` library). Further more, croquemort stores some information about the redirection: the first redirect code and the final url. When encountering a redirection, the JSON response looks like this (note `redirect-url` and `redirect-status-code`):
+
+```json
+{
+  "checked-url": "https://goo.gl/ovZB",
+  "final-url": "http://news.ycombinator.com",
+  "final-status-code": "200",
+  "redirect-url": "https://goo.gl/ovZB",
+  "redirect-status-code": "301",
+  "etag": "",
+  "content-length": "",
+  "content-disposition": "",
+  "content-md5": "",
+  "content-location": "",
+  "expires": "",
+  "updated": "2015-06-03T16:21:52.569974",
+  "last-modified": "",
+  "content-encoding": "gzip",
+  "content-type": "text/html; charset=utf-8"  
+}
+```
 
 
 ### Filtering results
@@ -254,8 +284,9 @@ Date: Wed, 03 Jun 2015 14:27:07 GMT
     "group": "efcf3897",
     "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT",
     "content-md5": "",
-    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
-    "status": "200",
+    "checked-url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
+    "final-url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
+    "final-status-code": "200",
     "expires": "",
     "content-type": "image/png",
     "content-length": "280919",
@@ -284,8 +315,9 @@ Date: Wed, 03 Jun 2015 14:27:58 GMT
     "group": "efcf3897",
     "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT",
     "content-md5": "",
-    "url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
-    "status": "200",
+    "checked-url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
+    "final-url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
+    "final-status-code": "200",
     "expires": "",
     "content-type": "image/png",
     "content-length": "280919",
@@ -332,32 +364,6 @@ Group hash: 2752262332
 There are three possibilities: "hourly", "daily" and "monthly". If you don't specify any you'll have to refresh URL checks manually. The `timer` service will check groups with associated frequencies and refresh associated URLs accordingly.
 
 
-### Migrations
-
-You may want to migrate some data over time with the `migrations` service:
-
-```shell
-$ nameko run croquemort.migrations
-starting services: migrations
-Connected to amqp://guest:**@127.0.0.1:5672//
-```
-
-You can now run a nameko shell:
-
-```shell
-$ nameko shell
->>> n.rpc.migrations.split_content_types()
->>> n.rpc.migrations.delete_urls_for('www.data.gouv.fr')
->>> n.rpc.migrations.delete_urls_for('static.data.gouv.fr')
-```
-
-The `split_content_types` migration is useful if you use Croquemort prior to the integration of the report: we use to store the whole string without splitting on the `charset` leading to fragmentation of the Content-types report graph.
-
-The `delete_urls_for` is useful if you want to delete all URLs related to a given `domain` you must pass as a paramater: we accidently checked URLs that are under our control so we decided to clean up in order to reduce the size of the Redis database and increase the relevance of reports.
-
-You are encouraged to add your own generic migrations to the service and share those with the community via pull-requests (see below).
-
-
 ### Webhook
 
 Instead of polling the results endpoints to get the results of one or many URLs checks, you can ask Croquemort to call a webhook when a check is completed.
@@ -383,15 +389,16 @@ Date: Wed, 03 Jun 2015 14:21:50 GMT
 }
 ```
 
-When the check is completed, a `POST` request should be emitted to `http://example.org/cb` with the metadata of the check. The webhook service expects a successfull (e.g. 200) HTTP status code. If not, it will retry (by default) 5 times, waiting at first 10 seconds before retrying then increasing the delay by a factor of 2 at each try. You can customize those values by setting the variables `WEBHOOK_RETRY`, `WEBHOOK_DELAY` and `WEBHOOK_BACKOFF`.
+When the check is completed, a `POST` request should be emitted to `http://example.org/cb` with the metadata of the check. The webhook service expects a successfull (e.g. 200) HTTP status code. If not, it will retry (by default) 5 times, waiting at first 10 seconds before retrying then increasing the delay by a factor of 2 at each try. You can customize those values by setting the variables `WEBHOOK_NB_RETRY`, `WEBHOOK_DELAY_INTERVAL` and `WEBHOOK_BACKOFF_FACTOR`.
 
 ```json
 {
   "data": {
-    "url": "http://yahoo.fr",
+    "checked-url": "http://yahoo.fr",
+    "final-url": "http://yahoo.fr",
     "group": "a80c20d4",
     "frequency": "hourly",
-    "status": "200",
+    "final-status-code": "200",
     "updated": "2017-07-10T12:50:20.219819",
     "etag": "",
     "expires": "-1",
@@ -406,6 +413,36 @@ When the check is completed, a `POST` request should be emitted to `http://examp
   }
 }
 ```
+
+
+### Migrations
+
+You may want to migrate some data over time with the `migrations` service:
+
+```shell
+$ nameko run croquemort.migrations
+starting services: migrations
+Connected to amqp://guest:**@127.0.0.1:5672//
+```
+
+You can now run a nameko shell:
+
+```shell
+$ nameko shell
+>>> n.rpc.migrations.split_content_types()
+>>> n.rpc.migrations.delete_urls_for('www.data.gouv.fr')
+>>> n.rpc.migrations.delete_urls_for('static.data.gouv.fr')
+```
+
+The `split_content_types` migration is useful if you use Croquemort prior to the integration of the report: we use to store the whole string without splitting on the `charset` leading to fragmentation of the Content-types report graph.
+
+The `delete_urls_for` is useful if you want to delete all URLs related to a given `domain` you must pass as a paramater: we accidently checked URLs that are under our control so we decided to clean up in order to reduce the size of the Redis database and increase the relevance of reports.
+
+The `migrate_from_1_to_2` (meta migration for `migrate_urls_redirect` and `add_hash_prefixes`) is used to migrate your database from croquemort `v1` to `v2`. In `v2` there are breaking changes from `v1` on the API JSON schema for a check result:
+- `url` becomes `checked-url`
+- `status` becomes `final-status-code`
+
+You are encouraged to add your own generic migrations to the service and share those with the community via pull-requests (see below).
 
 
 ## Contributing
