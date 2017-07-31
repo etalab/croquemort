@@ -79,10 +79,10 @@ def apply_filters(data, filters, excludes):
     has_domain = has_domain_filter or has_domain_exclude
     filtered_domain = (
         has_domain_filter
-        and urlparse(data['url']).netloc == filters.pop('domain'))
+        and urlparse(data['checked-url']).netloc == filters.pop('domain'))
     excluded_domain = (
         has_domain_exclude
-        and urlparse(data['url']).netloc == excludes.pop('domain'))
+        and urlparse(data['checked-url']).netloc == excludes.pop('domain'))
     kept_domain = ((has_domain_filter and filtered_domain)
                    or (has_domain_exclude and not excluded_domain))
     has_props = all(data.get(prop) == value
