@@ -51,7 +51,8 @@ class WebhookService(object):
     @event_handler('url_crawler', 'url_crawled')
     def send_response(self, metadata):
         """Call a webhook with checked url results"""
-        url = metadata.get('url')
+        # TODO test (and unit test)
+        url = metadata.get('checked-url')
         callback_urls = self.storage.get_webhooks_for_url(url)
         if not callback_urls:
             return

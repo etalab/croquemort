@@ -23,13 +23,13 @@ def test_webhook_valid_call(
     dispatch = event_dispatcher(web_container_config)
     rmock.post(test_cb_url, text='xxx')
     with entrypoint_waiter(container, 'send_response'):
-        dispatch('url_crawler', 'url_crawled', {'url': test_url})
+        dispatch('url_crawler', 'url_crawled', {'checked-url': test_url})
     requests_l = filter_requests(test_cb_url, rmock.request_history)
     assert len(requests_l) == 1
     request = requests_l[0]
     assert request.method == 'POST'
     assert request.url == test_cb_url
-    assert request.json() == {'data': {'url': test_url}}
+    assert request.json() == {'data': {'checked-url': test_url}}
 
 
 @requests_mock.Mocker(kw='rmock', real_http=True)
@@ -47,13 +47,13 @@ def test_webhook_retry(
     # 1 failed response and then a valid one
     rmock.post(test_cb_url, [{'status_code': 404}, {'status_code': 200}])
     with entrypoint_waiter(container, 'send_response'):
-        dispatch('url_crawler', 'url_crawled', {'url': test_url})
+        dispatch('url_crawler', 'url_crawled', {'checked-url': test_url})
     requests_l = filter_requests(test_cb_url, rmock.request_history)
     assert len(requests_l) == 2
     request = requests_l[-1]
     assert request.method == 'POST'
     assert request.url == test_cb_url
-    assert request.json() == {'data': {'url': test_url}}
+    assert request.json() == {'data': {'checked-url': test_url}}
 
 
 @requests_mock.Mocker(kw='rmock', real_http=True)
@@ -72,10 +72,10 @@ def test_webhook_timeout_retry(
     rmock.post(test_cb_url, [{'exc': requests.exceptions.ConnectTimeout},
                              {'status_code': 200}])
     with entrypoint_waiter(container, 'send_response'):
-        dispatch('url_crawler', 'url_crawled', {'url': test_url})
+        dispatch('url_crawler', 'url_crawled', {'checked-url': test_url})
     requests_l = filter_requests(test_cb_url, rmock.request_history)
     assert len(requests_l) == 2
     request = requests_l[-1]
     assert request.method == 'POST'
     assert request.url == test_cb_url
-    assert request.json() == {'data': {'url': test_url}}
+    assert request.json() == {'data': {'checked-url': test_url}}

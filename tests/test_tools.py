@@ -48,15 +48,16 @@ def test_apply_filters():
 
 def test_apply_filters_with_domains():
     assert apply_filters(
-        {'url': 'http://example.com/'}, {'domain': 'example.org'}, {}) is None
-    input = {'url': 'http://example.org/'}
+        {'checked-url': 'http://example.com/'}, {'domain': 'example.org'},
+        {}) is None
+    input = {'checked-url': 'http://example.org/'}
     assert apply_filters(input, {'domain': 'example.org'}, {}) == input
     assert apply_filters(input, {}, {'domain': 'example.org'}) is None
-    input = {'url': 'http://example.org/'}
+    input = {'checked-url': 'http://example.org/'}
     assert apply_filters(input, {'domain': 'example.com'}, {}) is None
     assert apply_filters(input, {}, {'domain': 'example.com'}) == input
     input = {
-        'url': 'http://example.com/',
+        'checked-url': 'http://example.com/',
         'status': '200',
     }
     assert apply_filters(
@@ -64,7 +65,7 @@ def test_apply_filters_with_domains():
     assert apply_filters(
         input, {'domain': 'example.org'}, {'status': '500'}) is None
     input = {
-        'url': 'http://example.org/',
+        'checked-url': 'http://example.org/',
         'status': '200',
     }
     assert apply_filters(
@@ -74,7 +75,7 @@ def test_apply_filters_with_domains():
     assert apply_filters(
         input, {'domain': 'example.org'}, {'status': '200'}) is None
     input = {
-        'url': 'http://example.org/',
+        'checked-url': 'http://example.org/',
         'status': '200',
         'content-type': 'text/html',
     }
