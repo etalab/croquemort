@@ -132,8 +132,11 @@ class HttpService(object):
         log('Checking {url} for group "{group}"'.format(url=url, group=group))
         # Store the webhook even if a check is already in progress,
         # this way the webhook should be called at the end of the check.
-        if callback_url and is_url(callback_url):
-            self.storage.store_webhook(url, callback_url)
+        if callback_url:
+            if is_url(callback_url):
+                self.storage.store_webhook(url, callback_url)
+            else:
+                logging.warning('callback_url is not an url %s' % callback_url)
         # Avoid simultaneous checks.
         # The flag will be removed when url_check is done.
         if not self.storage.is_currently_checked(url):
