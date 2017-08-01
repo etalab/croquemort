@@ -79,3 +79,26 @@ def test_webhook_timeout_retry(
     assert request.method == 'POST'
     assert request.url == test_cb_url
     assert request.json() == {'data': {'checked-url': test_url}}
+
+
+@requests_mock.Mocker(kw='rmock', real_http=True)
+def test_webhook_multiple_urls(
+        web_container_config, container_factory, rmock=None):
+    test_url = 'http://example.org'
+    test_cb_url = 'http://example.org/cb'
+    test_cb_url_2 = 'http://example.org/cb2'
+    container = container_factory(WebhookService, web_container_config)
+    storage = replace_dependencies(container, 'storage')
+    storage.get_webhooks_for_url = lambda url: [test_cb_url, test_cb_url_2]
+    container.start()
+    dispatch = event_dispatcher(web_container_config)
+    rmock.post(test_cb_url, text='xxx')
+    rmock.post(test_cb_url_2, text='xxx')
+    with entrypoint_waiter(container, 'send_response'):
+        dispatch('url_crawler', 'url_crawled', {'checked-url': test_url})
+    requests_l = filter_requests(test_cb_url, rmock.request_history)
+    assert len(requests_l) == 2
+    for request in requests_l:
+        assert request.method == 'POST'
+        assert request.url == test_cb_url or test_cb_url_2
+        assert request.json() == {'data': {'checked-url': test_url}}
