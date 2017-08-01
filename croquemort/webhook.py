@@ -15,7 +15,7 @@ log = logging.info
 TIMEOUT = (3.1, 9.1)
 
 DELAY_INTERVAL = 10  # in seconds
-NB_RETRY = 5
+NB_RETRY = 3
 # increase the retry delay by this factor at each try
 BACKOFF_FACTOR = 2
 
