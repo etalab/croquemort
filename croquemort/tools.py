@@ -1,6 +1,5 @@
 import json
 import hashlib
-import re
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -107,54 +106,3 @@ def retrieve_datetime(datetime_isoformat):
         return datetime.strptime(datetime_isoformat, "%Y-%m-%dT%H:%M:%S.%f")
     except ValueError:
         return datetime.strptime(datetime_isoformat, "%Y-%m-%dT%H:%M:%S")
-
-
-def is_url(url):
-    # See https://github.com/kvesteri/validators for reference.
-    ip_middle_oct = u"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5]))"
-    ip_last_oct = u"(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))"
-    url_pattern = re.compile(
-        u"^"
-        # protocol identifier
-        u"(?:(?:https?|ftp)://)"
-        # user:pass authentication
-        u"(?:\S+(?::\S*)?@)?"
-        u"(?:"
-        u"(?P<private_ip>"
-        # IP address exclusion
-        # private & local networks
-        u"(?:(?:10|127)" + ip_middle_oct + u"{2}" + ip_last_oct + u")|"
-        u"(?:(?:169\.254|192\.168)" + ip_middle_oct + ip_last_oct + u")|"
-        u"(?:172\.(?:1[6-9]|2\d|3[0-1])" + ip_middle_oct + ip_last_oct + u"))"
-        u"|"
-        # private & local hosts
-        u"(?P<private_host>"
-        u"(?:localhost))"
-        u"|"
-        # IP address dotted notation octets
-        # excludes loopback network 0.0.0.0
-        # excludes reserved space >= 224.0.0.0
-        # excludes network & broadcast addresses
-        # (first & last IP address of each class)
-        u"(?P<public_ip>"
-        u"(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])"
-        u"" + ip_middle_oct + u"{2}"
-        u"" + ip_last_oct + u")"
-        u"|"
-        # host name
-        u"(?:(?:[a-z\u00a1-\uffff0-9]-?)*[a-z\u00a1-\uffff0-9]+)"
-        # domain name
-        u"(?:\.(?:[a-z\u00a1-\uffff0-9]-?)*[a-z\u00a1-\uffff0-9]+)*"
-        # TLD identifier
-        u"(?:\.(?:[a-z\u00a1-\uffff]{2,}))"
-        u")"
-        # port number
-        u"(?::\d{2,5})?"
-        # resource path
-        u"(?:/\S*)?"
-        # query string
-        u"(?:\?\S*)?"
-        u"$",
-        re.UNICODE | re.IGNORECASE
-    )
-    return url_pattern.match(url)

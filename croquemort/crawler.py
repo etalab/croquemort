@@ -1,12 +1,12 @@
 import collections
 import logging
 import requests
+import validators
 
 from nameko.events import event_handler, EventDispatcher
 
 from .logger import LoggingDependency
 from .storages import RedisStorage
-from .tools import is_url
 
 log = logging.info
 FakeResponse = collections.namedtuple('Response', ['status_code', 'headers'])
@@ -27,7 +27,7 @@ class CrawlerService(object):
         url, group, frequency = url_group_frequency
         log(('Checking {url} for group {group} and frequency "{frequency}"'
              .format(url=url, group=group, frequency=frequency)))
-        if not is_url(url):
+        if not validators.url(url):
             logging.error('Error with {url}: not a URL'.format(url=url))
             return
         self.storage.store_url(url)
