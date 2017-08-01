@@ -161,4 +161,4 @@ class MigrationsService(object):
         log('Migrating from 1 to 2...')
         self.add_hash_prefixes()
         self.migrate_urls_redirect()
-        log('Migration done.')
+        log('Migrations from 1 to 2 done.')
