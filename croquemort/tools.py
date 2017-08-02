@@ -1,6 +1,5 @@
 import json
 import hashlib
-import re
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -79,10 +78,10 @@ def apply_filters(data, filters, excludes):
     has_domain = has_domain_filter or has_domain_exclude
     filtered_domain = (
         has_domain_filter
-        and urlparse(data['url']).netloc == filters.pop('domain'))
+        and urlparse(data['checked-url']).netloc == filters.pop('domain'))
     excluded_domain = (
         has_domain_exclude
-        and urlparse(data['url']).netloc == excludes.pop('domain'))
+        and urlparse(data['checked-url']).netloc == excludes.pop('domain'))
     kept_domain = ((has_domain_filter and filtered_domain)
                    or (has_domain_exclude and not excluded_domain))
     has_props = all(data.get(prop) == value
@@ -107,12 +106,3 @@ def retrieve_datetime(datetime_isoformat):
         return datetime.strptime(datetime_isoformat, "%Y-%m-%dT%H:%M:%S.%f")
     except ValueError:
         return datetime.strptime(datetime_isoformat, "%Y-%m-%dT%H:%M:%S")
-
-
-def is_url(url):
-    # See https://github.com/kvesteri/validators for reference.
-    url_pattern = re.compile(
-        r'^[a-z]+://([^/:]+\.[a-z]{2,10}|([0-9]{{1,3}}\.)'
-        r'{{3}}[0-9]{{1,3}})(:[0-9]+)?(\/.*)?$'
-    )
-    return url_pattern.match(url)

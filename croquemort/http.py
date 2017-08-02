@@ -2,6 +2,7 @@ import json
 from urllib.parse import urlencode
 
 import logging
+import validators
 from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
@@ -10,7 +11,7 @@ from .decorators import cache_page, required_parameters
 from .logger import LoggingDependency
 from .reports import compute_csv, compute_report
 from .storages import RedisStorage
-from .tools import apply_filters, extract_filters, generate_hash_for, is_url
+from .tools import apply_filters, extract_filters, generate_hash_for
 
 log = logging.info
 
@@ -132,8 +133,11 @@ class HttpService(object):
         log('Checking {url} for group "{group}"'.format(url=url, group=group))
         # Store the webhook even if a check is already in progress,
         # this way the webhook should be called at the end of the check.
-        if callback_url and is_url(callback_url):
-            self.storage.store_webhook(url, callback_url)
+        if callback_url:
+            if validators.url(callback_url):
+                self.storage.store_webhook(url, callback_url)
+            else:
+                logging.warning('callback_url is not an url %s' % callback_url)
         # Avoid simultaneous checks.
         # The flag will be removed when url_check is done.
         if not self.storage.is_currently_checked(url):

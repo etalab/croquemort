@@ -15,7 +15,7 @@ log = logging.info
 TIMEOUT = (3.1, 9.1)
 
 DELAY_INTERVAL = 10  # in seconds
-NB_RETRY = 5
+NB_RETRY = 3
 # increase the retry delay by this factor at each try
 BACKOFF_FACTOR = 2
 
@@ -51,7 +51,7 @@ class WebhookService(object):
     @event_handler('url_crawler', 'url_crawled')
     def send_response(self, metadata):
         """Call a webhook with checked url results"""
-        url = metadata.get('url')
+        url = metadata.get('checked-url')
         callback_urls = self.storage.get_webhooks_for_url(url)
         if not callback_urls:
             return
@@ -70,5 +70,5 @@ class WebhookService(object):
                 send(callback_url, metadata)
             except WebhookUnreachableException as e:
                 logging.error(('Webhook unreachable: {url} - {code} ({detail})'
-                               .format(url=callback_url, code=e.code,
+                               .format(url=callback_url, code=e.status,
                                        detail=e.original_exception)))
