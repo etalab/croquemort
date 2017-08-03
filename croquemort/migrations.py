@@ -148,7 +148,9 @@ class MigrationsService(object):
                     log('Missing status for hash %s (%s)' % (url_hash, data))
             else:
                 log('No url for hash %s (%s) - deleting' % (url_hash, data))
+                database.lrem('urls', 0, url_hash)
                 database.delete(url_hash)
+
         log('Url schema migration done.')
 
     @rpc
