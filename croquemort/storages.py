@@ -124,7 +124,8 @@ class RedisStorage(DependencyProvider):
         for group_hash in self.database.lrange(frequency, 0, -1):
             group_infos = self.get_group(group_hash)
             group_infos.pop('name')
-            for url_hash, url in group_infos.iteritems():
+            group_infos.pop('url')
+            for url_hash, url in group_infos.items():
                 yield url
 
     def is_currently_checked(self, url, delay=60*10):  # In seconds.
