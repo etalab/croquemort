@@ -85,14 +85,14 @@ Content-Type: text/plain; charset=utf-8
 Date: Wed, 03 Jun 2015 14:21:50 GMT
 
 {
-  "url-hash": "fc6040c5"
+  "url-hash": "u:fc6040c5"
 }
 ```
 
 The service returns a URL hash that will be used to retrieve informations related to that URL:
 
 ```shell
-$ http :8000/url/fc6040c5
+$ http :8000/url/u:fc6040c5
 HTTP/1.1 200 OK
 Connection: keep-alive
 Content-Length: 335
@@ -159,14 +159,14 @@ Content-Type: text/plain; charset=utf-8
 Date: Wed, 03 Jun 2015 14:24:00 GMT
 
 {
-  "group-hash": "efcf3897"
+  "group-hash": "g:efcf3897"
 }
 ```
 
 This time, the service returns a group hash that will be used to retrieve informations related to that group:
 
 ```shell
-$ http :8000/group/efcf3897
+$ http :8000/group/g:efcf3897
 HTTP/1.1 200 OK
 Connection: keep-alive
 Content-Length: 941
@@ -174,10 +174,10 @@ Content-Type: text/plain; charset=utf-8
 Date: Wed, 03 Jun 2015 14:26:04 GMT
 
 {
-  "179d104f": {
+  "u:179d104f": {
     "content-encoding": "",
     "content-disposition": "",
-    "group": "efcf3897",
+    "group": "g:efcf3897",
     "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT",
     "content-md5": "",
     "checked-url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
@@ -191,10 +191,10 @@ Date: Wed, 03 Jun 2015 14:26:04 GMT
     "content-location": ""
   },
   "name": "datagouvfr",
-  "fc6040c5": {
+  "u:fc6040c5": {
     "content-disposition": "",
     "content-encoding": "gzip",
-    "group": "efcf3897",
+    "group": "g:efcf3897",
     "last-modified": "",
     "content-md5": "",
     "content-location": "",
@@ -270,7 +270,7 @@ Both when fetching one and many urls, croquemort has basic support of HTTP redir
 You can filter results returned for a given group by header (or status) with the `filter_` prefix:
 
 ```shell
-$ http GET :8000/group/efcf3897 filter_content-type="image/png"
+$ http GET :8000/group/g:efcf3897 filter_content-type="image/png"
 HTTP/1.1 200 OK
 Connection: keep-alive
 Content-Length: 539
@@ -278,10 +278,10 @@ Content-Type: text/plain; charset=utf-8
 Date: Wed, 03 Jun 2015 14:27:07 GMT
 
 {
-  "179d104f": {
+  "u:179d104f": {
     "content-encoding": "",
     "content-disposition": "",
-    "group": "efcf3897",
+    "group": "g:efcf3897",
     "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT",
     "content-md5": "",
     "checked-url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
@@ -301,7 +301,7 @@ Date: Wed, 03 Jun 2015 14:27:07 GMT
 You can exclude results returned for a given group by header (or status) with the `exclude_` prefix:
 
 ```shell
-$ http GET :8000/group/efcf3897 exclude_content-length=""
+$ http GET :8000/group/g:efcf3897 exclude_content-length=""
 HTTP/1.1 200 OK
 Connection: keep-alive
 Content-Length: 539
@@ -309,10 +309,10 @@ Content-Type: text/plain; charset=utf-8
 Date: Wed, 03 Jun 2015 14:27:58 GMT
 
 {
-  "179d104f": {
+  "u:179d104f": {
     "content-encoding": "",
     "content-disposition": "",
-    "group": "efcf3897",
+    "group": "g:efcf3897",
     "last-modified": "Tue, 31 Mar 2015 14:38:37 GMT",
     "content-md5": "",
     "checked-url": "https://www.data.gouv.fr/s/images/2015-03-31/d2eb53b14c5f4e6690e150ea7be40a88/cover-datafrance-retina.png",
@@ -338,7 +338,7 @@ You can programmatically register new URLs and groups using the RPC proxy. There
 
 ```shell
 $ PYTHONPATH=. python tests/example_csv.py --csvfile path/to/your/file.csv --group groupname
-Group hash: 2752262332
+Group hash: g:2752262332
 ```
 
 The script returns a group hash that you can use through the HTTP interface as documented above.
@@ -358,7 +358,7 @@ You can now specify a `frequency` parameter when you `POST` against `/check/many
 
 ```shell
 $ PYTHONPATH=. python example_csv.py --csvfile path/to/your/file.csv --group groupname --frequency hourly
-Group hash: 2752262332
+Group hash: g:2752262332
 ```
 
 There are three possibilities: "hourly", "daily" and "monthly". If you don't specify any you'll have to refresh URL checks manually. The `timer` service will check groups with associated frequencies and refresh associated URLs accordingly.
@@ -385,7 +385,7 @@ Content-Type: text/plain; charset=utf-8
 Date: Wed, 03 Jun 2015 14:21:50 GMT
 
 {
-  "url-hash": "fc6040c5"
+  "url-hash": "u:fc6040c5"
 }
 ```
 
@@ -396,7 +396,7 @@ When the check is completed, a `POST` request should be emitted to `http://examp
   "data": {
     "checked-url": "http://yahoo.fr",
     "final-url": "http://yahoo.fr",
-    "group": "a80c20d4",
+    "group": "g:a80c20d4",
     "frequency": "hourly",
     "final-status-code": "200",
     "updated": "2017-07-10T12:50:20.219819",
