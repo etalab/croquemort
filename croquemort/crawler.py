@@ -9,6 +9,9 @@ from nameko.events import event_handler
 from .logger import LoggingDependency
 from .storages import RedisStorage
 
+HEAD_TIMEOUT = 10  # in seconds
+GET_TIMEOUT = 3 * 60  # in seconds
+
 # See https://github.com/kvesteri/validators for reference.
 url_pattern = re.compile(
     r'^[a-z]+://([^/:]+\.[a-z]{2,10}|([0-9]{{1,3}}\.)'
@@ -42,12 +45,19 @@ class CrawlerService(object):
             if frequency:
                 self.storage.store_frequency(url, group, frequency)
         try:
-            response = session.head(url, allow_redirects=True)
+            try:
+                response = session.head(url, allow_redirects=True,
+                                        timeout=HEAD_TIMEOUT)
+            except requests.exceptions.ReadTimeout:
+                # simulate 404 to trigger GET request below
+                response = FakeResponse(status_code=404, headers={})
             # Double check for servers not dealing properly with HEAD.
             if response.status_code in (404, 405):
                 log('Checking {url} with a GET'.format(url=url))
-                response = session.get(url, allow_redirects=True)
-        except requests.exceptions.ConnectionError:
+                response = session.get(url, allow_redirects=True,
+                                       timeout=GET_TIMEOUT)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.ReadTimeout):
             response = FakeResponse(status_code=503, headers={})
         except Exception as e:
             logbook.error('Error with {url}: {e}'.format(url=url, e=e))
