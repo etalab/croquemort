@@ -8,6 +8,9 @@ from nameko.events import event_handler, EventDispatcher
 from .logger import LoggingDependency
 from .storages import RedisStorage
 
+HEAD_TIMEOUT = 10  # in seconds
+GET_TIMEOUT = 3 * 60  # in seconds
+
 log = logging.info
 FakeResponse = collections.namedtuple('Response', ['status_code', 'headers'])
 session = requests.Session()
@@ -36,12 +39,19 @@ class CrawlerService(object):
             if frequency:
                 self.storage.store_frequency(url, group, frequency)
         try:
-            response = session.head(url, allow_redirects=True)
+            try:
+                response = session.head(url, allow_redirects=True,
+                                        timeout=HEAD_TIMEOUT)
+            except requests.exceptions.ReadTimeout:
+                # simulate 404 to trigger GET request below
+                response = FakeResponse(status_code=404, headers={})
             # Double check for servers not dealing properly with HEAD.
             if response.status_code in (404, 405):
                 log('Checking {url} with a GET'.format(url=url))
-                response = session.get(url, allow_redirects=True)
-        except requests.exceptions.ConnectionError:
+                response = session.get(url, allow_redirects=True,
+                                       timeout=GET_TIMEOUT)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.ReadTimeout):
             response = FakeResponse(status_code=503, headers={})
         except Exception as e:
             logging.error('Error with {url}: {e}'.format(url=url, e=e))

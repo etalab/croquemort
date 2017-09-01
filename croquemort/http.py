@@ -143,4 +143,4 @@ class HttpService(object):
         if not self.storage.is_currently_checked(url):
             self.dispatch('url_to_check', (url, group, frequency))
         else:
-            log('Check of {url} already in progress'.format(url=url))
+            log('Check of {url} done not so long ago'.format(url=url))
