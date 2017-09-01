@@ -3,6 +3,7 @@ import logging
 import requests
 import validators
 
+from nameko.dependency_providers import Config
 from nameko.events import event_handler, EventDispatcher
 
 from .logger import LoggingDependency
@@ -23,6 +24,7 @@ class CrawlerService(object):
     storage = RedisStorage()
     logger = LoggingDependency()
     dispatch = EventDispatcher()
+    config = Config()
 
     @event_handler('http_server', 'url_to_check')
     @event_handler('timer', 'url_to_check')
@@ -40,16 +42,18 @@ class CrawlerService(object):
                 self.storage.store_frequency(url, group, frequency)
         try:
             try:
+                timeout = self.config.get('CRAWLER_HEAD_TIMEOUT', HEAD_TIMEOUT)
                 response = session.head(url, allow_redirects=True,
-                                        timeout=HEAD_TIMEOUT)
+                                        timeout=timeout)
             except requests.exceptions.ReadTimeout:
                 # simulate 404 to trigger GET request below
                 response = FakeResponse(status_code=404, headers={})
             # Double check for servers not dealing properly with HEAD.
             if response.status_code in (404, 405):
                 log('Checking {url} with a GET'.format(url=url))
+                timeout = self.config.get('CRAWLER_GET_TIMEOUT', GET_TIMEOUT)
                 response = session.get(url, allow_redirects=True,
-                                       timeout=GET_TIMEOUT)
+                                       timeout=timeout)
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.ReadTimeout):
             response = FakeResponse(status_code=503, headers={})
