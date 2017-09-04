@@ -4,6 +4,8 @@ rpc_exchange: 'nameko-rpc'
 max_workers: 10
 parent_calls_tracked: 10
 REDIS_URI: 'redis://localhost:6379/5'
+CRAWLER_GET_TIMEOUT: 180
+CRAWLER_HEAD_TIMEOUT: 10
 LOGGING:
     version: 1
     formatters:
