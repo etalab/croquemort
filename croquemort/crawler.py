@@ -52,7 +52,7 @@ class CrawlerService(object):
                 # simulate 404 to trigger GET request below
                 response = FakeResponse(status_code=404, headers={})
             # Double check for servers not dealing properly with HEAD.
-            if response.status_code in (404, 405):
+            if response.status_code in (400, 404, 405):
                 log('Checking {url} with a GET'.format(url=url))
                 response = session.get(url, allow_redirects=True,
                                        timeout=GET_TIMEOUT)
