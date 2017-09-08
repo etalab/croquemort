@@ -237,6 +237,23 @@ def test_crawling_url(runner_factory, rpc_proxy_factory):
     assert storage.store_metadata.call_count == 1
 
 
+# TODO use config file for KNOWN_HEAD_OFFENDER_DOMAINS (v2)
+# TODO use request mock to check HEAD is not called (v2)
+def test_crawling_head_offender_url(runner_factory, rpc_proxy_factory):
+    runner = runner_factory(CrawlerService)
+    crawler_container = get_container(runner, CrawlerService)
+    storage = replace_dependencies(crawler_container, 'storage')
+    runner.start()
+    config = {'AMQP_URI': 'amqp://guest:guest@localhost:5672/nameko_test'}
+    dispatch = event_dispatcher(config)
+    with entrypoint_waiter(crawler_container, 'check_url'):
+        dispatch('http_server', 'url_to_check',
+                 ['http://www.bnf.fr/test_crawling_url', None, None])
+    assert storage.store_url.call_count == 1
+    assert storage.store_group.call_count == 0
+    assert storage.store_metadata.call_count == 1
+
+
 def test_crawling_group(runner_factory, rpc_proxy_factory):
     runner = runner_factory(CrawlerService)
     crawler_container = get_container(runner, CrawlerService)
