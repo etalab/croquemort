@@ -56,6 +56,7 @@ class CrawlerService(object):
                 log('Checking {url} with a GET'.format(url=url))
                 response = session.get(url, allow_redirects=True,
                                        timeout=GET_TIMEOUT, stream=True)
+                response.close()
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.ReadTimeout):
             response = FakeResponse(status_code=503, headers={})
