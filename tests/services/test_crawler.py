@@ -83,3 +83,18 @@ def test_store_no_redirect(
     assert stored['checked-url'] == 'http://no-redirect.com'
     assert stored.get('url') is None
     assert stored.get('status') is None
+
+
+# TODO use config file for KNOWN_HEAD_OFFENDER_DOMAINS (v2)
+# TODO use request mock to check HEAD is not called (v2)
+def test_crawling_head_offender_url(container_factory, web_container_config):
+    crawler_container = container_factory(CrawlerService, web_container_config)
+    storage = replace_dependencies(crawler_container, 'storage')
+    crawler_container.start()
+    dispatch = event_dispatcher(web_container_config)
+    with entrypoint_waiter(crawler_container, 'check_url'):
+        dispatch('http_server', 'url_to_check',
+                 ['http://www.bnf.fr/test_crawling_url', None, None])
+    assert storage.store_url.call_count == 1
+    assert storage.store_group.call_count == 0
+    assert storage.store_metadata.call_count == 1
