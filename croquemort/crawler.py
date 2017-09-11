@@ -1,4 +1,5 @@
 import re
+from urllib.parse import urlparse
 
 import collections
 import logbook
@@ -15,6 +16,7 @@ GET_TIMEOUT = 3 * 60  # in seconds
 # TODO move to config file
 KNOWN_HEAD_OFFENDER_DOMAINS = [
     'www.bnf.fr',
+    'echanges.bnf.fr',
     'echanges.dila.gouv.fr',
 ]
 
@@ -51,8 +53,8 @@ class CrawlerService(object):
             if frequency:
                 self.storage.store_frequency(url, group, frequency)
         try:
-            head_offend = any([re.match('^(http|https|ftp)://%s' % d, url)
-                              for d in KNOWN_HEAD_OFFENDER_DOMAINS])
+            domain = urlparse(url).netloc
+            head_offend = domain in KNOWN_HEAD_OFFENDER_DOMAINS
             if not head_offend:
                 try:
                     response = session.head(url, allow_redirects=True,
