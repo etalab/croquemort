@@ -5,10 +5,7 @@ from nameko.standalone.events import event_dispatcher
 from nameko.testing.services import entrypoint_waiter, replace_dependencies
 
 from croquemort.webhook import WebhookService
-
-
-def filter_requests(url, requests_l):
-    return [r for r in requests_l if url in r.url]
+from ..utils import filter_mock_requests
 
 
 @requests_mock.Mocker(kw='rmock', real_http=True)
@@ -24,7 +21,7 @@ def test_webhook_valid_call(
     rmock.post(test_cb_url, text='xxx')
     with entrypoint_waiter(container, 'send_response'):
         dispatch('url_crawler', 'url_crawled', {'checked-url': test_url})
-    requests_l = filter_requests(test_cb_url, rmock.request_history)
+    requests_l = filter_mock_requests(test_cb_url, rmock.request_history)
     assert len(requests_l) == 1
     request = requests_l[0]
     assert request.method == 'POST'
@@ -48,7 +45,7 @@ def test_webhook_retry(
     rmock.post(test_cb_url, [{'status_code': 404}, {'status_code': 200}])
     with entrypoint_waiter(container, 'send_response'):
         dispatch('url_crawler', 'url_crawled', {'checked-url': test_url})
-    requests_l = filter_requests(test_cb_url, rmock.request_history)
+    requests_l = filter_mock_requests(test_cb_url, rmock.request_history)
     assert len(requests_l) == 2
     request = requests_l[-1]
     assert request.method == 'POST'
@@ -73,7 +70,7 @@ def test_webhook_timeout_retry(
                              {'status_code': 200}])
     with entrypoint_waiter(container, 'send_response'):
         dispatch('url_crawler', 'url_crawled', {'checked-url': test_url})
-    requests_l = filter_requests(test_cb_url, rmock.request_history)
+    requests_l = filter_mock_requests(test_cb_url, rmock.request_history)
     assert len(requests_l) == 2
     request = requests_l[-1]
     assert request.method == 'POST'
@@ -96,7 +93,7 @@ def test_webhook_multiple_urls(
     rmock.post(test_cb_url_2, text='xxx')
     with entrypoint_waiter(container, 'send_response'):
         dispatch('url_crawler', 'url_crawled', {'checked-url': test_url})
-    requests_l = filter_requests(test_cb_url, rmock.request_history)
+    requests_l = filter_mock_requests(test_cb_url, rmock.request_history)
     assert len(requests_l) == 2
     for request in requests_l:
         assert request.method == 'POST'
