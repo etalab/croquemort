@@ -127,9 +127,9 @@ class HttpService(object):
     @rpc
     def fetch(self, url, group=None, frequency=None):
         log('Checking {url} for group "{group}"'.format(url=url, group=group))
-        # Add a 6 hours delay before checking again,
+        # Add a 3 hours delay before checking again,
         # avoid queuing too much checks for the same url.
-        if not self.storage.is_currently_checked(url, delay=60 * 60 * 6):
+        if not self.storage.is_currently_checked(url, delay=60 * 60 * 3):
             self.dispatch('url_to_check', (url, group, frequency))
         else:
             log('Check of {url} done not so long ago'.format(url=url))
