@@ -1,5 +1,7 @@
 from collections import namedtuple
 
+import requests_mock
+
 from nameko.testing.services import entrypoint_waiter, replace_dependencies
 from nameko.testing.utils import get_extension
 from nameko.standalone.events import event_dispatcher
@@ -7,6 +9,7 @@ from nameko.standalone.events import event_dispatcher
 from croquemort.crawler import CrawlerService
 from croquemort.storages import RedisStorage
 from croquemort.tools import generate_hash_for
+from ..utils import filter_mock_requests
 
 DummyResponse = namedtuple('res',
                            ['url', 'status_code', 'headers', 'history'])
@@ -85,16 +88,24 @@ def test_store_no_redirect(
     assert stored.get('status') is None
 
 
-# TODO use config file for KNOWN_HEAD_OFFENDER_DOMAINS (v2)
-# TODO use request mock to check HEAD is not called (v2)
-def test_crawling_head_offender_url(container_factory, web_container_config):
+@requests_mock.Mocker(kw='rmock', real_http=True)
+def test_crawling_head_offender_url(
+        container_factory, web_container_config, rmock=None):
+    url_to_check = 'http://example-head.com/test_crawling_url'
+    rmock.head(url_to_check)
+    rmock.get(url_to_check, text='xxx')
+    web_container_config['HEAD_DOMAINS_BLACKLIST'] = ['example-head.com']
     crawler_container = container_factory(CrawlerService, web_container_config)
     storage = replace_dependencies(crawler_container, 'storage')
     crawler_container.start()
     dispatch = event_dispatcher(web_container_config)
     with entrypoint_waiter(crawler_container, 'check_url'):
         dispatch('http_server', 'url_to_check',
-                 ['http://www.bnf.fr/test_crawling_url', None, None])
+                 [url_to_check, None, None])
     assert storage.store_url.call_count == 1
     assert storage.store_group.call_count == 0
     assert storage.store_metadata.call_count == 1
+    # check that no HEAD method was called
+    requests_l = filter_mock_requests(url_to_check, rmock.request_history)
+    assert len(requests_l) == 1
+    assert requests_l[0].method == 'GET'
