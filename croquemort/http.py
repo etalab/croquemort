@@ -1,7 +1,8 @@
 import json
 from urllib.parse import urlencode
 
-import logbook
+import logging
+import validators
 from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
@@ -10,9 +11,9 @@ from .decorators import cache_page, required_parameters
 from .logger import LoggingDependency
 from .reports import compute_csv, compute_report
 from .storages import RedisStorage
-from .tools import apply_filters, extract_filters, generate_hash
+from .tools import apply_filters, extract_filters, generate_hash_for
 
-log = logbook.debug
+log = logging.info
 
 
 class HttpService(object):
@@ -25,11 +26,11 @@ class HttpService(object):
     @required_parameters('url')
     def retrieve_url(self, data):
         url = data.get('url')
-        group = data.get('group', None)
+        group = data.get('group')
         log('Retrieving url {url} for group {group}'.format(
             url=url, group=group))
         self.fetch(url, group)  # Try again for later check.
-        return self.retrieve_url_from_hash(data, generate_hash(url))
+        return self.retrieve_url_from_hash(data, generate_hash_for('url', url))
 
     @http('GET', '/url/<url_hash>')
     def retrieve_url_from_hash(self, request_or_data, url_hash):
@@ -45,7 +46,8 @@ class HttpService(object):
     def retrieve_group(self, data):
         group = data.get('group')
         log('Retrieving group {group}'.format(group=group))
-        return self.retrieve_group_from_hash(data, generate_hash(group))
+        return self.retrieve_group_from_hash(data,
+                                             generate_hash_for('group', group))
 
     @http('GET', '/group/<group_hash>')
     @required_parameters()
@@ -102,11 +104,12 @@ class HttpService(object):
     @required_parameters('url')
     def check_one(self, data):
         url = data.get('url')
-        group = data.get('group', None)
-        url_hash = generate_hash(url)
+        group = data.get('group')
+        callback_url = data.get('callback_url')
+        url_hash = generate_hash_for('url', url)
         log('Checking "{url}" ({hash}) in group "{group}"'.format(
             url=url, hash=url_hash, group=group))
-        self.fetch(url, group=group)
+        self.fetch(url, group=group, callback_url=callback_url)
         return json.dumps({'url-hash': url_hash}, indent=2)
 
     @http('POST', '/check/many')
@@ -114,22 +117,30 @@ class HttpService(object):
     def check_many(self, data):
         urls = data.get('urls')
         group = data.get('group')
-        group_hash = generate_hash(group)
-        frequency = data.get('frequency', None)
+        group_hash = generate_hash_for('group', group)
+        frequency = data.get('frequency')
+        callback_url = data.get('callback_url')
         log(('Checking {num} URLs in group "{group}" ({hash}) '
              'with frequency "{frequency}"'.format(num=len(urls), group=group,
                                                    hash=group_hash,
                                                    frequency=frequency)))
         for url in urls:
-            self.fetch(url, group, frequency)
+            self.fetch(url, group, frequency, callback_url)
         return json.dumps({'group-hash': group_hash}, indent=2)
 
     @rpc
-    def fetch(self, url, group=None, frequency=None):
+    def fetch(self, url, group=None, frequency=None, callback_url=None):
         log('Checking {url} for group "{group}"'.format(url=url, group=group))
-        # Add a 3 hours delay before checking again,
-        # avoid queuing too much checks for the same url.
-        if not self.storage.is_currently_checked(url, delay=60 * 60 * 3):
+        # Store the webhook even if a check is already in progress,
+        # this way the webhook should be called at the end of the check.
+        if callback_url:
+            if validators.url(callback_url):
+                self.storage.store_webhook(url, callback_url)
+            else:
+                logging.warning('callback_url is not an url %s' % callback_url)
+        # Avoid simultaneous checks.
+        # The flag will be removed when url_check is done.
+        if not self.storage.is_currently_checked(url):
             self.dispatch('url_to_check', (url, group, frequency))
         else:
             log('Check of {url} done not so long ago'.format(url=url))

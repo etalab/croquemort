@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 
 from croquemort.tools import (
-    apply_filters, data_from_request, extract_filters, generate_hash
+    apply_filters, data_from_request, extract_filters, _generate_hash,
+    generate_hash_for
 )
 
 
@@ -13,8 +14,15 @@ def test_data_from_request():
 
 
 def test_generate_hash():
-    assert generate_hash('foo') == 'acbd18db'
-    assert generate_hash('bar') == '37b51d19'
+    assert _generate_hash('foo') == 'acbd18db'
+    assert _generate_hash('bar') == '37b51d19'
+
+
+def test_generate_hash_for():
+    assert generate_hash_for('url', 'foo') == 'u:acbd18db'
+    assert generate_hash_for('group', 'bar') == 'g:37b51d19'
+    assert generate_hash_for('check', 'bar') == 'c:37b51d19'
+    assert generate_hash_for('webhook', 'foo') == 'w:acbd18db'
 
 
 def test_extract_filters():
@@ -40,15 +48,16 @@ def test_apply_filters():
 
 def test_apply_filters_with_domains():
     assert apply_filters(
-        {'url': 'http://example.com/'}, {'domain': 'example.org'}, {}) is None
-    input = {'url': 'http://example.org/'}
+        {'checked-url': 'http://example.com/'}, {'domain': 'example.org'},
+        {}) is None
+    input = {'checked-url': 'http://example.org/'}
     assert apply_filters(input, {'domain': 'example.org'}, {}) == input
     assert apply_filters(input, {}, {'domain': 'example.org'}) is None
-    input = {'url': 'http://example.org/'}
+    input = {'checked-url': 'http://example.org/'}
     assert apply_filters(input, {'domain': 'example.com'}, {}) is None
     assert apply_filters(input, {}, {'domain': 'example.com'}) == input
     input = {
-        'url': 'http://example.com/',
+        'checked-url': 'http://example.com/',
         'status': '200',
     }
     assert apply_filters(
@@ -56,7 +65,7 @@ def test_apply_filters_with_domains():
     assert apply_filters(
         input, {'domain': 'example.org'}, {'status': '500'}) is None
     input = {
-        'url': 'http://example.org/',
+        'checked-url': 'http://example.org/',
         'status': '200',
     }
     assert apply_filters(
@@ -66,7 +75,7 @@ def test_apply_filters_with_domains():
     assert apply_filters(
         input, {'domain': 'example.org'}, {'status': '200'}) is None
     input = {
-        'url': 'http://example.org/',
+        'checked-url': 'http://example.org/',
         'status': '200',
         'content-type': 'text/html',
     }

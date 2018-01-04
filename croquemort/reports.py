@@ -14,6 +14,7 @@ from .tools import apply_filters, retrieve_datetime
 template_path = os.path.join(os.path.dirname(__file__), 'templates')
 env = Environment(loader=FileSystemLoader(template_path), autoescape=True)
 
+
 # Flat UI colors from http://flatuicolors.co/
 COLORS = [
     '#1ABC9C', '#16A085', '#2ECC71', '#27AE60', '#3498DB', '#2980B9',
@@ -42,14 +43,14 @@ def compute_report(urls, filters, excludes, querystring, with_links=False):
             continue
 
         # Statuses.
-        status = data.get('status', '')
+        status = data.get('final-status-code', '')
         if not status:
             continue
 
         # URLs.
-        url = urlparse(data['url'])
+        url = urlparse(data['checked-url'])
         if with_links:
-            links.append(data['url'])
+            links.append(data['checked-url'])
 
         statuses[status] += 1
         schemes[url.scheme] += 1
@@ -120,11 +121,11 @@ def compute_csv(urls, filters, excludes):
                 continue
 
             # Statuses.
-            status = data.get('status', '')
+            status = data.get('final-status-code', '')
             if not status:
                 continue
 
-            url = data['url']
+            url = data['checked-url']
             content_type = data.get('content-type', '')
             updated = data.get('updated', '')
 

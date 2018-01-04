@@ -1,7 +1,7 @@
 import datetime
+import logging
 from weakref import WeakKeyDictionary
 
-import logbook
 from nameko.extensions import DependencyProvider
 
 
@@ -15,8 +15,8 @@ class LoggingDependency(DependencyProvider):
         self.timestamps[worker_ctx] = datetime.datetime.now()
         service_name = worker_ctx.service_name
         method_name = worker_ctx.entrypoint.method_name
-        logbook.debug(('Worker {service}.{method} starting'
-                       .format(service=service_name, method=method_name)))
+        logging.info(('Worker {service}.{method} starting'
+                      .format(service=service_name, method=method_name)))
 
     def worker_result(self, worker_ctx, result=None, exc_info=None):
         service_name = worker_ctx.service_name
@@ -31,4 +31,4 @@ class LoggingDependency(DependencyProvider):
         msg = ('Worker {service}.{method} {status} after {duration}{interval}'
                .format(service=service_name, method=method_name, status=status,
                        duration=duration, interval=self.interval))
-        logbook.debug(msg)
+        logging.info(msg)

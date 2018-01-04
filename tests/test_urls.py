@@ -6,8 +6,8 @@ from croquemort.http import HttpService
 
 
 @pytest.fixture
-def web_session(container_factory, web_config, web_session):
-    container = container_factory(HttpService, web_config)
+def web_session(container_factory, web_container_config, web_session):
+    container = container_factory(HttpService, web_container_config)
     container.start()
     return web_session
 
@@ -56,7 +56,7 @@ def test_post_url(web_session):
     rv = web_session.post('/check/one', data=json.dumps({
         'url': 'http://example.org'
     }))
-    assert rv.json()['url-hash'] == 'dab521de'
+    assert rv.json()['url-hash'] == 'u:dab521de'
     assert rv.status_code == 200
 
 
@@ -65,7 +65,7 @@ def test_post_urls(web_session):
         'urls': ['http://example.org', 'http://example.com'],
         'group': 'datagouvfr'
     }))
-    assert rv.json()['group-hash'] == 'efcf3897'
+    assert rv.json()['group-hash'] == 'g:efcf3897'
     assert rv.status_code == 200
 
 

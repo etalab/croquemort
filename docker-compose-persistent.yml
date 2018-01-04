@@ -1,0 +1,16 @@
+redis:
+    image: redis
+    ports:
+    - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+    - ./data:/data
+
+
+rabbitmq:
+    image: rabbitmq:3.5-management
+    ports:
+    - "5672:5672"
+    - "15672:15672"
+    environment:
+      RABBITMQ_NODENAME: croquemort

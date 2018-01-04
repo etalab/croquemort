@@ -4,7 +4,7 @@ import redis
 from nameko.extensions import DependencyProvider
 from kombu.utils.encoding import str_to_bytes
 
-from .tools import generate_hash
+from .tools import generate_hash_for
 
 
 REDIS_URI_KEY = 'REDIS_URI'
@@ -39,6 +39,10 @@ class RedisStorage(DependencyProvider):
     def get_group(self, group_hash):
         return self.database.hgetall(str_to_bytes(group_hash))
 
+    def get_webhooks_for_url(self, url):
+        w_hash = generate_hash_for('webhook', url)
+        return self.database.lrange(str_to_bytes(w_hash), 0, -1)
+
     def delete_url(self, url_hash, data=None):
         if data is None:
             data = self.get_url(url_hash)
@@ -47,29 +51,31 @@ class RedisStorage(DependencyProvider):
         self.database.lrem('urls', 0, url_hash)
 
     def store_url(self, url):
-        url_hash = generate_hash(url)
-        self.database.hset(url_hash, 'url', str_to_bytes(url))
+        url_hash = generate_hash_for('url', url)
+        self.database.hset(url_hash, 'checked-url', str_to_bytes(url))
         if url_hash not in self.database.lrange('urls', 0, -1):
             self.database.rpush('urls', str_to_bytes(url_hash))
 
     def store_group(self, url, group):
-        url_hash = generate_hash(url)
-        group_hash = generate_hash(group)
+        url_hash = generate_hash_for('url', url)
+        group_hash = generate_hash_for('group', group)
         self.database.hset(url_hash, 'group', str_to_bytes(group_hash))
         self.database.hset(group_hash, 'name', str_to_bytes(group))
         self.database.hset(group_hash, url_hash, str_to_bytes(url))
         self.database.hset(group_hash, 'url', str_to_bytes(url))
 
     def store_frequency(self, url, group, frequency):
-        url_hash = generate_hash(url)
-        group_hash = generate_hash(group)
+        url_hash = generate_hash_for('url', url)
+        group_hash = generate_hash_for('group', group)
         self.database.hset(url_hash, 'frequency', str_to_bytes(frequency))
         if group_hash not in self.database.lrange(frequency, 0, -1):
             self.database.rpush(frequency, str_to_bytes(group_hash))
 
     def store_metadata(self, url, response):
-        url_hash = generate_hash(url)
-        self.database.hset(url_hash, 'status',
+        url_hash = generate_hash_for('url', url)
+        self.database.hset(url_hash, 'final-url',
+                           str_to_bytes(response.url))
+        self.database.hset(url_hash, 'final-status-code',
                            str_to_bytes(response.status_code))
         self.database.hset(url_hash, 'updated',
                            str_to_bytes(datetime.now().isoformat()))
@@ -82,6 +88,21 @@ class RedisStorage(DependencyProvider):
                     self.store_content_type(url_hash, value)
                 else:
                     self.database.hset(url_hash, header, str_to_bytes(value))
+        # deal w/ redirect if any
+        if len(response.history):
+            self.database.hset(url_hash, 'redirect-url',
+                               str_to_bytes(response.history[0].url))
+            self.database.hset(url_hash, 'redirect-status-code',
+                               str_to_bytes(response.history[0].status_code))
+        return self.get_url(url_hash)
+
+    def store_webhook(self, url, callback_url):
+        """
+        Store a webhook to be called when at callback_url when url is checked
+        """
+        if callback_url not in self.get_webhooks_for_url(url):
+            w_hash = generate_hash_for('webhook', url)
+            self.database.rpush(w_hash, str_to_bytes(callback_url))
 
     def store_content_type(self, url_hash, value):
         try:
@@ -103,17 +124,28 @@ class RedisStorage(DependencyProvider):
         for group_hash in self.database.lrange(frequency, 0, -1):
             group_infos = self.get_group(group_hash)
             group_infos.pop('name')
-            for url_hash, url in group_infos.iteritems():
+            group_infos.pop('url')
+            for url_hash, url in group_infos.items():
                 yield url
 
-    def is_currently_checked(self, url, delay):  # In seconds.
-        check_url_hash = 'check-{hash}'.format(hash=generate_hash(url))
+    def is_currently_checked(self, url, delay=60*10):  # In seconds.
+        """Will look for check flag and set it if not there.
+
+        The flag should be removed by `remove_check_flag` but will be removed
+        after `delay` anyhow.
+        """
+        check_url_hash = generate_hash_for('check', url)
         if self.database.exists(check_url_hash):
             return True
         else:
             self.database.set(check_url_hash, url)
             self.database.expire(check_url_hash, delay)
             return False
+
+    def remove_check_flag(self, url):
+        check_url_hash = generate_hash_for('check', url)
+        if self.database.exists(check_url_hash):
+            self.database.delete(check_url_hash)
 
     def get_cache(self, key):
         return self.database.hgetall(str_to_bytes(key))

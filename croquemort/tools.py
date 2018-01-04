@@ -3,9 +3,17 @@ import hashlib
 from datetime import datetime
 from urllib.parse import urlparse
 
-import logbook
+import logging
 
-log = logbook.debug
+log = logging.info
+
+# /!\ dict values should be kept unique for sanity
+HASH_PREFIXES = {
+    'url': 'u',
+    'group': 'g',
+    'check': 'c',
+    'webhook': 'w',
+}
 
 
 def data_from_request(request):
@@ -28,9 +36,18 @@ def flatten_get_parameters(request):
             for k, v in dict(request.args).items()}
 
 
-def generate_hash(value):
+def _generate_hash(value):
     """Custom hash to avoid long values."""
     return hashlib.md5(value.encode('utf-8')).hexdigest()[:8]
+
+
+def generate_hash_for(hash_type, value):
+    """Return a hash prefixed for hash_type"""
+    prefix = HASH_PREFIXES.get(hash_type)
+    if not prefix:
+        raise Exception('Unknown hash_type {} in {}'.format(hash_type,
+                                                            HASH_PREFIXES))
+    return '{}:{}'.format(prefix, _generate_hash(value))
 
 
 def extract_filters(querystring_dict):
@@ -61,10 +78,10 @@ def apply_filters(data, filters, excludes):
     has_domain = has_domain_filter or has_domain_exclude
     filtered_domain = (
         has_domain_filter
-        and urlparse(data['url']).netloc == filters.pop('domain'))
+        and urlparse(data['checked-url']).netloc == filters.pop('domain'))
     excluded_domain = (
         has_domain_exclude
-        and urlparse(data['url']).netloc == excludes.pop('domain'))
+        and urlparse(data['checked-url']).netloc == excludes.pop('domain'))
     kept_domain = ((has_domain_filter and filtered_domain)
                    or (has_domain_exclude and not excluded_domain))
     has_props = all(data.get(prop) == value
