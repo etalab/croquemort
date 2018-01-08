@@ -100,7 +100,7 @@ tests_require = pip('test.pip')
 
 setup(
     name='croquemort',
-    version='2.0.2.dev',
+    version='2.0.2',
     description='Croquemort linkchecker',
     long_description=long_description,
     url='https://github.com/opendatateam/croquemort',
