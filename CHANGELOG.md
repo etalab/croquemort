@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Fix publish job on Circle
 
 ## 2.0.1 (2018-01-08)
 
