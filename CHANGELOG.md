@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 2.0.0 (2017-10-23)
 
 Mandatory migrations from `1.0.0` to `2.0.0`:
