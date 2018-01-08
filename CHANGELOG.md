@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 2.0.1 (2018-01-08)
 
 - Add packaging workflow, publish on Pypi
