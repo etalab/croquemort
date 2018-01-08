@@ -123,7 +123,7 @@ setup(
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",
         "Topic :: System :: Software Distribution",
-        "Topic :: Software Development :: Libraries :: Python Modules"
+        "Topic :: Software Development :: Libraries :: Python Modules",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
