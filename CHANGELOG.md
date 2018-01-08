@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Add packaging workflow, publish on Pypi
 
 ## 2.0.0 (2017-10-23)
 
