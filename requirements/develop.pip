@@ -3,3 +3,4 @@ flake8==3.4.1
 invoke==0.21.0
 pytest-cov==2.5.1
 readme-renderer==17.2
+wheel
