@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 2.0.3 (2018-01-08)
 
 - Fix setup.py
 
