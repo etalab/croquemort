@@ -1,18 +1,17 @@
 import csv
-import os
 from collections import defaultdict
 from datetime import datetime, timedelta
 from io import StringIO
 from urllib.parse import urlparse
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, PackageLoader
 from werkzeug.datastructures import Headers
 from werkzeug.wrappers import Response
 
 from .tools import apply_filters, retrieve_datetime
 
-template_path = os.path.join(os.path.dirname(__file__), 'templates')
-env = Environment(loader=FileSystemLoader(template_path), autoescape=True)
+loader = PackageLoader('croquemort', 'templates')
+env = Environment(loader=loader, autoescape=True)
 
 
 # Flat UI colors from http://flatuicolors.co/
