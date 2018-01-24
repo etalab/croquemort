@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 2.0.4 (2018-01-24)
 
 - Fix packaging and other enhancements [#49](https://github.com/opendatateam/croquemort/pull/49)
