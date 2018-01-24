@@ -1,0 +1,7 @@
+include LICENSE MANIFEST.in README.md CHANGELOG.md
+
+recursive-include requirements *
+
+recursive-include croquemort *
+
+global-exclude *~ *.egg *.pyc
