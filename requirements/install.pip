@@ -3,4 +3,3 @@ nameko==2.8.3
 redis==2.10.6
 wrapt==1.10.11
 validators==0.12.1
-eventlet==0.22.0
