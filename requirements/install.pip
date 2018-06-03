@@ -2,4 +2,4 @@ Jinja2==2.10
 nameko==2.8.5
 redis==2.10.6
 wrapt==1.10.11
-validators==0.12.1
+validators==0.12.2
