@@ -55,7 +55,9 @@ class CrawlerService(object):
                                             timeout=head_timeout)
                 except requests.exceptions.ReadTimeout:
                     # simulate 404 to trigger GET request below
-                    response = FakeResponse(status_code=404, headers={})
+                    log('Timeout on %s', url)
+                    response = FakeResponse(status_code=404, headers={},
+                                            url=url, history=[])
             # Double check for servers not dealing properly with HEAD.
             if head_offend or response.status_code in (404, 405):
                 log('Checking {url} with a GET'.format(url=url))
