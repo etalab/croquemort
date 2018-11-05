@@ -113,7 +113,7 @@ class MigrationsService(object):
                 elif data.get('url'):
                     self._migrate_url(key, data)
                 else:
-                    log('/!\ unknown hash type at key {}'.format(key))
+                    log('/!\\ unknown hash type at key {}'.format(key))
         self._migrate_urls_list()
         for freq in ['hourly', 'daily', 'monthly']:
             self._migrate_frequency(freq)
