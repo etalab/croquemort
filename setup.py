@@ -54,7 +54,7 @@ tests_require = pip('test.pip')
 
 setup(
     name='croquemort',
-    version='2.0.5.dev',
+    version='2.1.0',
     description='Croquemort linkchecker',
     long_description=long_description,
     long_description_content_type='text/markdown',
