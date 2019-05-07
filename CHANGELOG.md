@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 2.1.0 (2019-05-07)
 
 - Fix HEAD timeout handling [#95](https://github.com/opendatateam/croquemort/pull/95)
