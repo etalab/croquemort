@@ -3,6 +3,7 @@
 ## Current (in progress)
 
 - Fix HEAD timeout handling [#95](https://github.com/opendatateam/croquemort/pull/95)
+- Remove homepage/dashboard [#140](https://github.com/opendatateam/croquemort/pull/140)
 
 ## 2.0.4 (2018-01-24)
 

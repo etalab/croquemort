@@ -18,23 +18,6 @@ def test_retrieve_url(container_factory, web_session, web_container_config):
     assert 'group' not in rv.json()
 
 
-def test_cache_report(container_factory, web_session, web_container_config):
-    http_container = container_factory(HttpService, web_container_config)
-    storage = replace_dependencies(http_container, 'storage')
-    storage.set_cache.return_value = None
-    storage.get_cache.return_value = None
-    storage.expire_cache.return_value = None
-    http_container.start()
-
-    rv = web_session.get('/')
-    cache_duration = 60 * 60 * 2  # Equals 2 hours.
-    default_key = 'cache-display_report-'
-    assert rv.text.startswith('<!doctype html>')
-    storage.get_cache.assert_called_once_with(default_key)
-    storage.set_cache.assert_called_once_with(default_key, ANY)  # HTML.
-    storage.expire_cache.assert_called_once_with(default_key, cache_duration)
-
-
 def test_retrieve_url_with_group(
         container_factory, web_session, web_container_config):
     http_container = container_factory(HttpService, web_container_config)

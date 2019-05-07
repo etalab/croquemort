@@ -12,12 +12,6 @@ def web_session(container_factory, web_container_config, web_session):
     return web_session
 
 
-def test_get_urls(web_session):
-    rv = web_session.get('/')
-    assert rv.text.startswith('<!doctype html>')
-    assert rv.status_code == 200
-
-
 def test_robots(web_session):
     rv = web_session.get('/robots.txt')
     assert rv.text == 'User-agent: *\nDisallow: /'

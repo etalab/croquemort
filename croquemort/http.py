@@ -1,5 +1,4 @@
 import json
-from urllib.parse import urlencode
 
 import logging
 import validators
@@ -7,9 +6,9 @@ from nameko.events import EventDispatcher
 from nameko.rpc import rpc
 from nameko.web.handlers import http
 
-from .decorators import cache_page, required_parameters
+from .decorators import required_parameters
 from .logger import LoggingDependency
-from .reports import compute_csv, compute_report
+from .reports import compute_csv
 from .storages import RedisStorage
 from .tools import apply_filters, extract_filters, generate_hash_for
 
@@ -68,20 +67,6 @@ class HttpService(object):
         infos['urls'] = urls_infos
         log('Returning {num} results'.format(num=len(infos['urls'])))
         return json.dumps(infos, indent=2)
-
-    @http('GET', '/')
-    @required_parameters()
-    @cache_page(60 * 60 * 2)  # Equals 2 hours.
-    def display_report(self, data):
-        log('Display report')
-        all_urls = self.storage.get_all_urls()
-        if not all_urls:
-            return 404, ''
-        querystring = urlencode(data)
-        with_links = 'display_links' in data
-        filters, excludes = extract_filters(data)
-        return compute_report(
-            all_urls, filters, excludes, querystring, with_links)
 
     @http('GET', '/robots.txt')
     def robots_txt(self, data):

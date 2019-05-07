@@ -1,11 +1,7 @@
-from datetime import datetime, timedelta
-from urllib.parse import urlencode
-
 import logging
 import wrapt
-from werkzeug.wrappers import Response
 
-from .tools import data_from_request, flatten_get_parameters, retrieve_datetime
+from .tools import data_from_request, flatten_get_parameters
 
 log = logging.info
 
@@ -36,27 +32,4 @@ def required_parameters(*parameters):
                              .format(data=data, parameter=parameter))
         args[0] = data
         return wrapped(*args, **kwargs)
-    return wrapper
-
-
-def cache_page(duration):
-    """A decorator for caching a view given parameters.
-
-    The cache is effective during `duration` seconds.
-    """
-    @wrapt.decorator
-    def wrapper(wrapped, instance, args, kwargs):
-        args = list(args)
-        data = args[0]
-        key = 'cache-{name}-{data}'.format(name=wrapped.__name__,
-                                           data=urlencode(data))
-        cached = instance.storage.get_cache(key)
-        if cached:
-            timestamp = retrieve_datetime(cached['timestamp'])
-            if timestamp + timedelta(seconds=duration) > datetime.now():
-                return Response(cached['content'], mimetype='text/html')
-        response = wrapped(*args, **kwargs)
-        instance.storage.set_cache(key, response.response[0])
-        instance.storage.expire_cache(key, duration)
-        return response
     return wrapper
