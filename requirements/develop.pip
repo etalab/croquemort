@@ -1,5 +1,5 @@
 -e .[test]
 flake8==3.7.7
-invoke==1.2.0
+invoke==1.4.1
 pytest-cov==2.7.1
 wheel
