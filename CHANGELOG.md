@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Add pyOpenSSL requirement for python3.7 compatibility [#197](https://github.com/etalab/croquemort/pull/197)
 
 ## 2.1.0 (2019-05-07)
 

@@ -3,3 +3,4 @@ redis==3.2.1
 nameko==2.12.0
 wrapt==1.11.1
 validators==0.12.5
+pyOpenSSL==19.1.0
