@@ -71,7 +71,8 @@ def test_store_redirect_metadata(
 
 def test_store_no_redirect(
         container_factory, rabbit_config, web_container_config):
-    res = DummyResponse('http://no-redirect.com', 200, None, [])
+    headers = {'content-type': 'text/html; charset=utf-8', 'content-length': '227090'}
+    res = DummyResponse('http://no-redirect.com', 200, headers, [])
     crawler_container = container_factory(CrawlerService, web_container_config)
     crawler_container.start()
     storage = get_extension(crawler_container, RedisStorage)
@@ -84,6 +85,9 @@ def test_store_no_redirect(
     assert stored['final-url'] == 'http://no-redirect.com'
     assert stored['final-status-code'] == '200'
     assert stored['checked-url'] == 'http://no-redirect.com'
+    assert stored['content-type'] == 'text/html'
+    assert stored['charset'] == 'utf-8'
+    assert stored['content-length'] == '227090'
     assert stored.get('url') is None
     assert stored.get('status') is None
 

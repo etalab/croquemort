@@ -112,7 +112,8 @@ Date: Wed, 03 Jun 2015 14:22:57 GMT
   "updated": "2015-06-03T16:21:52.569974",
   "last-modified": "",
   "content-encoding": "gzip",
-  "content-type": "text/html; charset=utf-8"
+  "content-type": "text/html",
+  "charset": "utf-8"
 }
 ```
 
@@ -139,7 +140,8 @@ Date: Wed, 03 Jun 2015 14:23:35 GMT
   "updated": "2015-06-03T16:21:52.569974",
   "last-modified": "",
   "content-encoding": "gzip",
-  "content-type": "text/html; charset=utf-8"
+  "content-type": "text/html",
+  "charset": "utf-8"
 }
 ```
 
@@ -200,7 +202,8 @@ Date: Wed, 03 Jun 2015 14:26:04 GMT
     "content-location": "",
     "content-length": "",
     "expires": "",
-    "content-type": "text/html; charset=utf-8",
+    "content-type": "text/html",
+    "charset": "utf-8",
     "final-status-code": "200",
     "updated": "2015-06-03T16:24:02.398105",
     "etag": "",
@@ -233,7 +236,8 @@ Date: Wed, 03 Jun 2015 14:23:35 GMT
   "updated": "2015-06-03T16:21:52.569974",
   "last-modified": "",
   "content-encoding": "gzip",
-  "content-type": "text/html; charset=utf-8"
+  "content-type": "text/html",
+  "charset": "utf-8"
 }
 ```
 
@@ -260,7 +264,8 @@ Both when fetching one and many urls, croquemort has basic support of HTTP redir
   "updated": "2015-06-03T16:21:52.569974",
   "last-modified": "",
   "content-encoding": "gzip",
-  "content-type": "text/html; charset=utf-8"  
+  "content-type": "text/html",
+  "charset": "utf-8"
 }
 ```
 
